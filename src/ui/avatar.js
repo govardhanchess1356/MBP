@@ -35,14 +35,14 @@ export const RETRO_PALETTE_HEX = [
 ];
 
 export const BUILTIN_CARTOON_AVATARS = {
-  default:   '/images/faces/avatar-default.png?v=real_v2',
-  happy:     '/images/faces/avatar-happy.png?v=real_v2',
-  cool:      '/images/faces/avatar-cool.png?v=real_v2',
-  grumpy:    '/images/faces/avatar-grumpy.png?v=real_v2',
-  surprised: '/images/faces/avatar-surprised.png?v=real_v2',
-  wink:      '/images/faces/avatar-wink.png?v=real_v2',
-  laugh:     '/images/faces/avatar-laugh.png?v=real_v2',
-  star_eyes: '/images/faces/avatar-star_eyes.png?v=real_v2',
+  default:   '/images/faces/avatar-default.png?v=nobg_v3',
+  happy:     '/images/faces/avatar-happy.png?v=nobg_v3',
+  cool:      '/images/faces/avatar-cool.png?v=nobg_v3',
+  grumpy:    '/images/faces/avatar-grumpy.png?v=nobg_v3',
+  surprised: '/images/faces/avatar-surprised.png?v=nobg_v3',
+  wink:      '/images/faces/avatar-wink.png?v=nobg_v3',
+  laugh:     '/images/faces/avatar-laugh.png?v=nobg_v3',
+  star_eyes: '/images/faces/avatar-star_eyes.png?v=nobg_v3',
 };
 
 // Convert hex palette to RGB triplets for Euclidean distance color quantization
@@ -250,29 +250,48 @@ export function drawAvatar(ctx, cx, cy, r, expression = 'default') {
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
     ctx.save();
 
-    // Circular clip
+    // 1. Soft glowing pastel badge disk behind the cutout face
+    const diskGrad = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r);
+    if (expression === 'grumpy') {
+      diskGrad.addColorStop(0, '#fff0f0');
+      diskGrad.addColorStop(0.85, '#ffccd0');
+      diskGrad.addColorStop(1, '#ff99a0');
+    } else if (expression === 'cool' || expression === 'wink') {
+      diskGrad.addColorStop(0, '#f0faff');
+      diskGrad.addColorStop(0.85, '#cceeff');
+      diskGrad.addColorStop(1, '#99ddff');
+    } else {
+      diskGrad.addColorStop(0, '#fff5f8');
+      diskGrad.addColorStop(0.85, '#ffe0eb');
+      diskGrad.addColorStop(1, '#ffa5ab');
+    }
+    ctx.fillStyle = diskGrad;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Draw the transparent cutout face with circular clipping
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(sprite, cx - r, cy - r, r * 2, r * 2);
-
     ctx.restore();
 
-    // Polished gold rim
-    ctx.save();
+    // 3. Polished gold rim
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.strokeStyle = '#ffd93b';
     ctx.lineWidth = Math.max(1.5, r * 0.08);
     ctx.stroke();
 
-    // Subtle inner glow
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.lineWidth = Math.max(0.75, r * 0.04);
+    // 4. Subtle inner highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = Math.max(0.75, r * 0.035);
     ctx.stroke();
 
     ctx.restore();
