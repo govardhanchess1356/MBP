@@ -55,8 +55,8 @@ function injectCSS() {
 
     #sc-wrapper {
       position: relative;
-      width: min(320px, 86vw);
-      height: min(440px, 68vh);
+      width: min(340px, 92vw);
+      height: min(520px, 78vh);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 0 35px rgba(255,217,59,0.3);
@@ -71,6 +71,7 @@ function injectCSS() {
       padding: 18px 16px;
       box-sizing: border-box;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       gap: 10px;
     }
 
@@ -134,9 +135,12 @@ function injectCSS() {
 
     .sc-media-thumb {
       width: 100%;
-      max-height: 140px;
-      object-fit: cover;
+      max-height: 280px;
+      object-fit: contain;
+      background: #000;
+      border-radius: 8px;
       display: block;
+      cursor: zoom-in;
     }
 
     .sc-media-caption {
@@ -151,23 +155,51 @@ function injectCSS() {
       background: linear-gradient(135deg, #1f0b29, #380d38);
       border: 1.5px solid #ff6eb4;
       border-radius: 8px;
-      padding: 8px 10px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .sc-voice-player:active {
+      transform: scale(0.98);
+    }
+    .sc-voice-player.playing {
+      border-color: #5effa3;
+      box-shadow: 0 0 15px rgba(94,255,163,0.35);
     }
     .sc-play-btn {
       background: #ffd93b;
       border: none;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 0.8rem;
+      width: 34px;
+      height: 34px;
+      font-size: 0.85rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* Scratch Lightbox Zoom */
+    #sc-lightbox {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      display: none; align-items: center; justify-content: center;
+      padding: 14px;
+      cursor: zoom-out;
+    }
+    #sc-lightbox.active { display: flex; }
+    #sc-lightbox img {
+      max-width: 95vw; max-height: 88vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 2px solid #ffd93b;
+      box-shadow: 0 0 30px rgba(255,217,59,0.5);
     }
 
     /* Scratch canvas (on top) */
@@ -268,7 +300,7 @@ export function showScratchCard(_container, cardData = {}, onDone) {
   const overlay = document.createElement('div');
   overlay.id = 'sc-overlay';
   overlay.innerHTML = /* html */`
-    <div id="sc-hint">← SCRATCH THE CARD TO REVEAL →</div>
+    <div id="sc-hint" style="cursor:pointer;" title="Tap or scratch to reveal">← SCRATCH OR TAP TO REVEAL →</div>
     <div id="sc-wrapper">
       <div id="sc-face" style="background:${bg}">
         <div id="sc-rarity-badge" style="color:${rarity.color}">${rarity.label}</div>
@@ -284,13 +316,13 @@ export function showScratchCard(_container, cardData = {}, onDone) {
             if (!srcUrl) return '';
             if (m.type === 'audio') {
               return /* html */`
-                <div class="sc-voice-player">
+                <div class="sc-voice-player" id="sc-voice-box-${idx}">
                   <button type="button" class="sc-play-btn" id="sc-audio-btn-${idx}">▶</button>
                   <div style="flex:1">
-                    <div style="font-size:0.26rem; color:#ffd93b;">🎙️ VOICE WISH</div>
-                    <div style="font-size:0.22rem; color:#fff;">${m.caption || 'Tap to play voice note'}</div>
+                    <div style="font-size:0.26rem; color:#ffd93b; font-weight:bold;">🎙️ VOICE WISH</div>
+                    <div id="sc-voice-sub-${idx}" style="font-size:0.22rem; color:#fff;">${m.caption || 'Tap to play voice note'}</div>
                   </div>
-                  <audio id="sc-audio-el-${idx}" src="${srcUrl}"></audio>
+                  <audio id="sc-audio-el-${idx}" src="${srcUrl}" preload="auto"></audio>
                 </div>
               `;
             }
@@ -304,7 +336,7 @@ export function showScratchCard(_container, cardData = {}, onDone) {
             }
             return /* html */`
               <div class="sc-media-item">
-                <img class="sc-media-thumb" src="${srcUrl}" alt="Memory" />
+                <img class="sc-media-thumb" src="${srcUrl}" alt="Memory" data-zoom-src="${srcUrl}" />
                 <div class="sc-media-caption">${m.caption || (mediaItems.length > 1 ? `Photo ${idx + 1}` : 'Birthday photo 📸')}</div>
               </div>
             `;
@@ -315,6 +347,11 @@ export function showScratchCard(_container, cardData = {}, onDone) {
       <canvas id="sc-canvas"></canvas>
     </div>
 
+    <!-- Scratch Photo Zoom Lightbox -->
+    <div id="sc-lightbox">
+      <img id="sc-lightbox-img" src="" alt="Full view" />
+    </div>
+
     <button id="sc-revealed-btn">✨ COLLECT TO ALBUM</button>
   `;
   document.body.appendChild(overlay);
@@ -322,27 +359,65 @@ export function showScratchCard(_container, cardData = {}, onDone) {
   // Bind audio players
   mediaItems.forEach((m, idx) => {
     if (m.type === 'audio') {
+      const box = document.getElementById(`sc-voice-box-${idx}`);
       const btn = document.getElementById(`sc-audio-btn-${idx}`);
       const audioEl = document.getElementById(`sc-audio-el-${idx}`);
-      btn?.addEventListener('click', () => {
-        if (audioEl) {
-          if (audioEl.paused) {
-            audioEl.play();
+      const sub = document.getElementById(`sc-voice-sub-${idx}`);
+
+      const togglePlay = (e) => {
+        e.stopPropagation();
+        if (!audioEl) return;
+        if (audioEl.paused) {
+          document.querySelectorAll('audio').forEach(a => { if (a !== audioEl) a.pause(); });
+          document.querySelectorAll('.sc-play-btn').forEach(b => { if (b !== btn) b.textContent = '▶'; });
+          document.querySelectorAll('.sc-voice-player').forEach(p => p.classList.remove('playing'));
+          audioEl.currentTime = 0;
+          audioEl.play().then(() => {
             btn.textContent = '⏸';
-            audioEl.onended = () => { btn.textContent = '▶'; };
-          } else {
-            audioEl.pause();
+            box?.classList.add('playing');
+            if (sub) sub.textContent = '🔊 Playing Voice Wish...';
+          }).catch((err) => {
+            console.warn('[audio-play-error]', err);
             btn.textContent = '▶';
-          }
+            if (sub) sub.textContent = 'Tap to play voice note';
+          });
+          audioEl.onended = () => {
+            btn.textContent = '▶';
+            box?.classList.remove('playing');
+            if (sub) sub.textContent = m.caption || 'Tap to play again';
+          };
         } else {
-          // Play celebratory sound if procedural
-          SFX.coin();
-          btn.textContent = '🎵';
-          setTimeout(() => { btn.textContent = '▶'; }, 1500);
+          audioEl.pause();
+          btn.textContent = '▶';
+          box?.classList.remove('playing');
+          if (sub) sub.textContent = 'Paused (Tap to resume)';
         }
-      });
+      };
+
+      box?.addEventListener('click', togglePlay);
+      btn?.addEventListener('click', togglePlay);
     }
   });
+
+  // Bind photo zoom in scratch card
+  overlay.querySelectorAll('.sc-media-thumb').forEach(img => {
+    img.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const src = img.getAttribute('data-zoom-src') || img.src;
+      const lb = document.getElementById('sc-lightbox');
+      const lbImg = document.getElementById('sc-lightbox-img');
+      if (lb && lbImg && src) {
+        lbImg.src = src;
+        lb.classList.add('active');
+      }
+    });
+  });
+  document.getElementById('sc-lightbox')?.addEventListener('click', (e) => {
+    e.currentTarget.classList.remove('active');
+  });
+
+  // Tap hint to instantly reveal
+  document.getElementById('sc-hint')?.addEventListener('click', () => fullReveal());
 
   // Setup Scratch Canvas
   const canvas = document.getElementById('sc-canvas');
@@ -398,12 +473,15 @@ export function showScratchCard(_container, cardData = {}, onDone) {
   function checkReveal() {
     if (revealed) return;
     const pct = getScratchedPercent(ctx, CARD_W, CARD_H);
-    if (pct >= 0.58) fullReveal();
+    if (pct >= 0.35) fullReveal();
   }
 
   function fullReveal() {
+    if (revealed) return;
     revealed = true;
     ctx.clearRect(0, 0, CARD_W, CARD_H);
+    canvas.style.pointerEvents = 'none';
+    canvas.style.display = 'none';
     const hint = document.getElementById('sc-hint');
     if (hint) hint.style.display = 'none';
     const btn = document.getElementById('sc-revealed-btn');

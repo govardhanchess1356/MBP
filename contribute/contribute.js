@@ -438,6 +438,75 @@ function renderForm() {
   bindEvents();
 }
 
+// ─── Client-Side Image Compression & Optimization ──────────────────────────
+async function compressImageFile(file, maxDim = 1000, quality = 0.72) {
+  if (!file.type || !file.type.startsWith('image/')) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(ev.target.result);
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function compressDataUrl(dataUrl, maxDim = 1000, quality = 0.72) {
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) return dataUrl;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width <= maxDim && height <= maxDim && dataUrl.length < 250000) {
+        return resolve(dataUrl);
+      }
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function bindEvents() {
   // Emoji Selection
   const badgeInput = document.getElementById('c-badge-photo-input');
@@ -455,18 +524,15 @@ function bindEvents() {
     if (badgeInput) badgeInput.value = '';
   });
 
-  // Custom Badge Photo Upload
-  badgeInput?.addEventListener('change', (e) => {
+  // Custom Badge Photo Upload (Compressed)
+  badgeInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      selectedEmoji = ev.target.result;
-      document.querySelectorAll('.c-emoji-btn').forEach(b => b.classList.remove('active'));
-      if (badgeImg) badgeImg.src = selectedEmoji;
-      if (badgeWrap) badgeWrap.style.display = 'flex';
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImageFile(file, 200, 0.8);
+    selectedEmoji = compressed;
+    document.querySelectorAll('.c-emoji-btn').forEach(b => b.classList.remove('active'));
+    if (badgeImg) badgeImg.src = selectedEmoji;
+    if (badgeWrap) badgeWrap.style.display = 'flex';
   });
 
   badgeRemove?.addEventListener('click', () => {
@@ -486,29 +552,43 @@ function bindEvents() {
     selectedTheme = btn.dataset.theme;
   });
 
-  // Media Upload (Photos/Videos)
+  // Media Upload (Photos/Videos) with auto-compression
   const mediaDrop = document.getElementById('c-media-drop');
   const mediaInput = document.getElementById('c-media-input');
   mediaDrop?.addEventListener('click', () => mediaInput?.click());
 
   mediaInput?.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const dropText = document.getElementById('c-media-drop');
+    if (dropText) dropText.innerText = `⏳ PROCESSING ${files.length} FILE(S)...`;
     for (const file of files) {
-      const isVideo = file.type.startsWith('video');
-      const reader = new FileReader();
-      reader.onload = (evt) => {
+      const isVideo = file.type && file.type.startsWith('video');
+      if (isVideo) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          mediaFiles.push({
+            type: 'video',
+            dataUrl: evt.target.result,
+            name: file.name,
+          });
+          updateMediaThumbs();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const compressed = await compressImageFile(file, 1000, 0.72);
         mediaFiles.push({
-          type: isVideo ? 'video' : 'photo',
-          dataUrl: evt.target.result,
+          type: 'photo',
+          dataUrl: compressed,
           name: file.name,
         });
         updateMediaThumbs();
-      };
-      reader.readAsDataURL(file);
+      }
     }
+    if (dropText) dropText.innerHTML = `<span>📸</span> TAP OR DROP PHOTOS / VIDEOS HERE<br><small style="font-size:0.24rem;color:#FFA5AB;">(Supports multiple photos — auto-optimized!)</small>`;
   });
 
-  // Sticker Upload
+  // Sticker Upload (Compressed)
   const stickerDrop = document.getElementById('c-sticker-drop');
   const stickerInput = document.getElementById('c-sticker-input');
   stickerDrop?.addEventListener('click', () => stickerInput?.click());
@@ -516,15 +596,12 @@ function bindEvents() {
   stickerInput?.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
     for (const file of files) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        stickerFiles.push({
-          dataUrl: evt.target.result,
-          name: file.name,
-        });
-        updateStickerThumbs();
-      };
-      reader.readAsDataURL(file);
+      const compressed = await compressImageFile(file, 400, 0.75);
+      stickerFiles.push({
+        dataUrl: compressed,
+        name: file.name,
+      });
+      updateStickerThumbs();
     }
   });
 
@@ -647,10 +724,32 @@ async function handleSubmit() {
   const submitBtn = document.getElementById('c-submit-btn');
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerText = 'PACKING SURPRISE...';
+    submitBtn.innerText = 'OPTIMIZING SURPRISE...';
   }
 
   try {
+    // 1. Optimize all media items in case raw photos were queued
+    for (let i = 0; i < mediaFiles.length; i++) {
+      if (mediaFiles[i].type === 'photo' && mediaFiles[i].dataUrl) {
+        if (submitBtn) submitBtn.innerText = `COMPRESSING PHOTO ${i + 1}/${mediaFiles.length}...`;
+        mediaFiles[i].dataUrl = await compressDataUrl(mediaFiles[i].dataUrl, 1000, 0.72);
+      }
+    }
+
+    for (let i = 0; i < stickerFiles.length; i++) {
+      if (stickerFiles[i].dataUrl) {
+        stickerFiles[i].dataUrl = await compressDataUrl(stickerFiles[i].dataUrl, 400, 0.75);
+      }
+    }
+
+    if (selectedEmoji && selectedEmoji.startsWith('data:image/')) {
+      selectedEmoji = await compressDataUrl(selectedEmoji, 200, 0.8);
+    }
+
+    if (submitBtn) {
+      submitBtn.innerText = 'SAVING TO MUSKIVERSE...';
+    }
+
     await saveContribution({
       authorName: name,
       cardTitle: cardTitle,
@@ -665,7 +764,7 @@ async function handleSubmit() {
     showSuccess(name);
   } catch (err) {
     console.error('Submit error:', err);
-    alert('Failed to save. Please try again!');
+    alert('Notice: ' + (err?.message || 'Could not complete save. Please check connection and try again!'));
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.innerText = '🚀 SEND BIRTHDAY SURPRISE!';

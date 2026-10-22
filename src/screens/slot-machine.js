@@ -8,7 +8,7 @@
  * - Dispenses multi-media Scratch Cards on every spin!
  */
 
-import { getCoins, addCoins, unlockCard } from '@/data/local-state.js';
+import { getCoins, addCoins, spendCoins, unlockCard } from '@/data/local-state.js';
 import { SFX } from '@/engine/sound.js';
 import { getAllCards } from '@/data/contribute-store.js';
 import { showScratchCard } from '@/ui/scratch-card.js';
@@ -230,7 +230,7 @@ export function mountSlotMachine(container, opts = {}) {
 
     isSpinning = true;
     spinBtn.disabled = true;
-    addCoins(-SPIN_COST);
+    spendCoins(SPIN_COST);
     updateCoins();
     SFX.coin();
 
@@ -286,7 +286,7 @@ export function mountSlotMachine(container, opts = {}) {
 
     if (s1.emoji === s2.emoji && s2.emoji === s3.emoji) {
       // 3 of a kind: JACKPOT!
-      winCoins = s1.val * 2;
+      winCoins = 25;
       cardRarity = 'MYTHIC';
       readout.innerHTML = `🎉 JACKPOT! 3x ${s1.emoji}!<br>+${winCoins} COINS + MYTHIC CARD!`;
       SFX.win();
@@ -294,12 +294,13 @@ export function mountSlotMachine(container, opts = {}) {
     } else if (s1.emoji === s2.emoji || s2.emoji === s3.emoji || s1.emoji === s3.emoji) {
       // 2 of a kind
       const match = s1.emoji === s2.emoji ? s1 : (s2.emoji === s3.emoji ? s2 : s1);
-      winCoins = 10;
+      winCoins = 0; // Pure card reward — spin cost 5 coins is preserved!
       cardRarity = 'RARE';
-      readout.innerHTML = `✨ LUCKY MATCH! 2x ${match.emoji}!<br>+${winCoins} COINS + RARE CARD!`;
+      readout.innerHTML = `✨ LUCKY MATCH! 2x ${match.emoji}!<br>YOU WON A RARE CARD! 🎁`;
       SFX.unlock();
     } else {
       // Consolation
+      winCoins = 0;
       cardRarity = 'COMMON';
       readout.innerHTML = `LUCKY SPIN! YOU WON A PRIZE CARD! 🎁`;
       SFX.coin();
@@ -310,17 +311,22 @@ export function mountSlotMachine(container, opts = {}) {
       updateCoins();
     }
 
-    // Pick card from expanded pool
+    // Pick card from real contributor cards
     setTimeout(() => {
       const cards = getAllCards();
+      if (!cards || cards.length === 0) {
+        readout.innerHTML = `LUCKY 19 ARCADE! PLAY MORE GAMES! ⭐`;
+        return;
+      }
       const matchingCards = cards.filter(c => c.rarity === cardRarity);
       const chosen = matchingCards.length ? matchingCards[Math.floor(Math.random() * matchingCards.length)] : cards[Math.floor(Math.random() * cards.length)];
 
-      unlockCard(chosen.slotId || chosen.id);
-
-      showScratchCard(container, chosen, () => {
-        opts.onCardDispensed?.(chosen.slotId || chosen.id);
-      });
+      if (chosen) {
+        unlockCard(chosen.slotId || chosen.id);
+        showScratchCard(container, chosen, () => {
+          opts.onCardDispensed?.(chosen.slotId || chosen.id);
+        });
+      }
     }, 1200);
   }
 

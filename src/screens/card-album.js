@@ -150,9 +150,10 @@ function injectCSS() {
     }
     #album-detail.visible { display: flex; }
     #album-detail-card {
-      width: min(340px, 92vw);
-      max-height: 84vh;
+      width: min(360px, 94vw);
+      max-height: 88vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       border-radius: 16px;
       padding: 20px 16px;
       display: flex; flex-direction: column;
@@ -222,7 +223,7 @@ function injectCSS() {
     }
     .album-media-photo {
       width: 100%;
-      max-height: 280px;
+      max-height: 380px;
       object-fit: contain;
       border-radius: 6px;
       background: #000;
@@ -230,13 +231,23 @@ function injectCSS() {
       display: block;
     }
     .album-modal-voice {
-      background: rgba(0,0,0,0.5);
+      background: linear-gradient(135deg, #1f0b29, #380d38);
       border: 1.5px solid #ff6eb4;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .album-modal-voice:active {
+      transform: scale(0.98);
+    }
+    .album-modal-voice.playing {
+      border-color: #5effa3;
+      box-shadow: 0 0 15px rgba(94,255,163,0.35);
     }
 
     /* Lightbox Fullscreen Zoom Overlay */
@@ -318,7 +329,15 @@ export function mountCardAlbum(container, { onHome } = {}) {
         </div>
 
         <div id="album-grid">
-          ${sorted.map(card => {
+          ${sorted.length === 0 ? `
+            <div style="grid-column: 1 / -1; text-align:center; padding: 40px 16px; background: rgba(0,0,0,0.45); border: 2px dashed #ff6eb4; border-radius: 14px; margin-top: 10px;">
+              <div style="font-size: 2.8rem; margin-bottom: 12px;">💌</div>
+              <div style="font-size: 0.42rem; color: #ffd93b; line-height: 1.8;">WAITING FOR WISHES!</div>
+              <div style="font-size: 0.28rem; color: #FFA5AB; line-height: 1.8; margin-top: 8px;">
+                Friends & family can write wishes, add photos & voice notes at <strong>/contribute</strong>!
+              </div>
+            </div>
+          ` : sorted.map(card => {
             const cardKey = card.slotId || card.id;
             const isContrib = (card.author && card.author !== 'Birthday Crew' && card.author !== 'Secret Admirer') ||
                               card.slotId?.startsWith('C_') || card.slotId?.startsWith('U_');
@@ -431,13 +450,13 @@ export function mountCardAlbum(container, { onHome } = {}) {
               const srcUrl = m.dataUrl || m.url;
               if (m.type === 'audio') {
                 return /* html */`
-                  <div class="album-modal-voice">
+                  <div class="album-modal-voice" id="modal-voice-box-${idx}">
                     <button type="button" class="sc-play-btn" id="modal-audio-btn-${idx}">▶</button>
                     <div style="flex:1">
-                      <div style="font-size:0.24rem; color:#ffd93b;">🎙️ VOICE WISH</div>
-                      <div style="font-size:0.2rem; color:#fff;">${m.caption || 'Tap to play'}</div>
+                      <div style="font-size:0.26rem; color:#ffd93b; font-weight:bold;">🎙️ VOICE WISH</div>
+                      <div id="modal-audio-sub-${idx}" style="font-size:0.22rem; color:#fff;">${m.caption || 'Tap to play voice note'}</div>
                     </div>
-                    <audio id="modal-audio-el-${idx}" src="${srcUrl}"></audio>
+                    <audio id="modal-audio-el-${idx}" src="${srcUrl}" preload="auto"></audio>
                   </div>
                 `;
               }
@@ -464,20 +483,43 @@ export function mountCardAlbum(container, { onHome } = {}) {
       // Audio handlers
       validMedia.forEach((m, idx) => {
         if (m.type === 'audio') {
+          const box = document.getElementById(`modal-voice-box-${idx}`);
           const btn = document.getElementById(`modal-audio-btn-${idx}`);
           const audioEl = document.getElementById(`modal-audio-el-${idx}`);
-          btn?.addEventListener('click', () => {
-            if (audioEl) {
-              if (audioEl.paused) {
-                audioEl.play();
+          const sub = document.getElementById(`modal-audio-sub-${idx}`);
+
+          const togglePlay = (e) => {
+            e.stopPropagation();
+            if (!audioEl) return;
+            if (audioEl.paused) {
+              document.querySelectorAll('audio').forEach(a => { if (a !== audioEl) a.pause(); });
+              document.querySelectorAll('.sc-play-btn').forEach(b => { if (b !== btn) b.textContent = '▶'; });
+              document.querySelectorAll('.album-modal-voice').forEach(p => p.classList.remove('playing'));
+              audioEl.currentTime = 0;
+              audioEl.play().then(() => {
                 btn.textContent = '⏸';
-                audioEl.onended = () => { btn.textContent = '▶'; };
-              } else {
-                audioEl.pause();
+                box?.classList.add('playing');
+                if (sub) sub.textContent = '🔊 Playing Voice Wish...';
+              }).catch(err => {
+                console.warn('[audio-play-error]', err);
                 btn.textContent = '▶';
-              }
+                if (sub) sub.textContent = 'Tap to play voice note';
+              });
+              audioEl.onended = () => {
+                btn.textContent = '▶';
+                box?.classList.remove('playing');
+                if (sub) sub.textContent = m.caption || 'Tap to play again';
+              };
+            } else {
+              audioEl.pause();
+              btn.textContent = '▶';
+              box?.classList.remove('playing');
+              if (sub) sub.textContent = 'Paused (Tap to resume)';
             }
-          });
+          };
+
+          box?.addEventListener('click', togglePlay);
+          btn?.addEventListener('click', togglePlay);
         }
       });
 

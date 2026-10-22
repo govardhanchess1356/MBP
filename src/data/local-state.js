@@ -5,16 +5,17 @@
  */
 
 export function getCoins() {
-  return parseInt(localStorage.getItem('muski_coins') ?? '0', 10);
+  const val = parseInt(localStorage.getItem('muski_coins'), 10);
+  return Number.isFinite(val) ? Math.max(0, val) : 0;
 }
 export function addCoins(n) {
-  const next = getCoins() + n;
-  localStorage.setItem('muski_coins', next);
+  const next = Math.max(0, getCoins() + Number(n));
+  localStorage.setItem('muski_coins', String(next));
   return next;
 }
 export function spendCoins(n) {
-  const next = Math.max(0, getCoins() - n);
-  localStorage.setItem('muski_coins', next);
+  const next = Math.max(0, getCoins() - Number(n));
+  localStorage.setItem('muski_coins', String(next));
   return next;
 }
 export function getCardsUnlocked() {

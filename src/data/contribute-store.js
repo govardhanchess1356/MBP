@@ -19,43 +19,31 @@ const STORAGE_KEY_STICKERS = 'muski_stickers';
 const STORAGE_KEY_VAULT    = 'muski_vault_messages';
 const STORAGE_KEY_MEDIA    = 'muski_media_pool';
 
-// ─── 1. Expanded Built-In Cards Deck (24 unique cards) ───────────────────────
-export const BUILTIN_CARDS = [
-  // Common cards
-  { id: 'card_1',  slotId: 'A1', emoji: '🌸', title: 'CHERRY BLOSSOM',     rarity: 'COMMON',    author: 'Birthday Crew', description: 'Spring has arrived! Wishing you bloom, joy, and endless smiles this year.', color: '#FFA5AB', bg: 'linear-gradient(135deg,#450920,#A53860)' },
-  { id: 'card_2',  slotId: 'B2', emoji: '🎈', title: 'PARTY BALLOON',      rarity: 'COMMON',    author: 'Birthday Crew', description: 'Float high above all worries. May your 19th year be light as air!', color: '#ff6eb4', bg: 'linear-gradient(135deg,#450920,#A53860)' },
-  { id: 'card_3',  slotId: 'D1', emoji: '🎀', title: 'PINK RIBBON',        rarity: 'COMMON',    author: 'Birthday Crew', description: 'All the best gifts in life come wrapped with love and sweet memories.', color: '#ff6eb4', bg: 'linear-gradient(135deg,#450920,#A53860)' },
-  { id: 'card_4',  slotId: 'D2', emoji: '🌺', title: 'HIBISCUS BREEZE',    rarity: 'COMMON',    author: 'Birthday Crew', description: 'Bright, radiant, and unstoppable. Keep shining your warm light on everyone!', color: '#DA627D', bg: 'linear-gradient(135deg,#450920,#A53860)' },
-  { id: 'card_5',  slotId: 'E1', emoji: '🍰', title: 'SWEET STRAWBERRY',   rarity: 'COMMON',    author: 'Birthday Crew', description: 'Life is better with extra sweetness. Eat all the pastries today!', color: '#FFA5AB', bg: 'linear-gradient(135deg,#450920,#A53860)' },
-  { id: 'card_6',  slotId: 'E2', emoji: '🍧', title: 'ICE CREAM SUNDAE',   rarity: 'COMMON',    author: 'Birthday Crew', description: 'Cool vibes only! You deserve the sweetest treats on your special day.', color: '#ff80bf', bg: 'linear-gradient(135deg,#450920,#A53860)' },
+// ─── 1. Real Contributor Cards (No Fake / Placeholder Cards) ─────────────────
+export const BUILTIN_CARDS = [];
 
-  // Rare cards
-  { id: 'card_7',  slotId: 'A2', emoji: '🎂', title: 'LEVEL 19 CAKE',      rarity: 'RARE',      author: 'Birthday Crew', description: 'Make the biggest wish! 19 is going to be your most legendary chapter.', color: '#ffd93b', bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)' },
-  { id: 'card_8',  slotId: 'B1', emoji: '🎁', title: 'MYSTERY BOX',        rarity: 'RARE',      author: 'Birthday Crew', description: 'Packed with 365 days of new adventures, triumphs, and surprises.', color: '#c9a0ff', bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)' },
-  { id: 'card_9',  slotId: 'C1', emoji: '🦋', title: 'GOLDEN BUTTERFLY',   rarity: 'RARE',      author: 'Birthday Crew', description: 'Spread your wings and fly higher than ever. Beautiful transformation awaits.', color: '#5ee0ff', bg: 'linear-gradient(135deg,#0a2a4a,#1a5080)' },
-  { id: 'card_10', slotId: 'C2', emoji: '🌙', title: 'MIDNIGHT MOON',      rarity: 'RARE',      author: 'Birthday Crew', description: 'Born at the magical hour of midnight. Dream big and reach for the galaxies!', color: '#c9a0ff', bg: 'linear-gradient(135deg,#12063a,#2a0a5a)' },
-  { id: 'card_11', slotId: 'E3', emoji: '🎧', title: 'RETRO CASSETTE',     rarity: 'RARE',      author: 'Birthday Crew', description: 'Turn up the music! Here is your soundtrack for turning 19 in style.', color: '#5ee0ff', bg: 'linear-gradient(135deg,#0a2a4a,#1a5080)' },
-  { id: 'card_12', slotId: 'F1', emoji: '🍹', title: 'MIDNIGHT MOCKTAIL',  rarity: 'RARE',      author: 'Birthday Crew', description: 'Cheers to another year of laughs, late-night talks, and inside jokes!', color: '#c9a0ff', bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)' },
-  { id: 'card_13', slotId: 'F2', emoji: '🎮', title: 'RETRO JOYSTICK',     rarity: 'RARE',      author: 'Birthday Crew', description: 'Player 1: MUSKI. Unlimited continues, high score unlocked!', color: '#ffd93b', bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)' },
-  { id: 'card_14', slotId: 'F3', emoji: '📸', title: 'POLAROID MEMORY',    rarity: 'RARE',      author: 'Birthday Crew', description: 'Capturing every smile, every candid laugh, and every unforgettable moment.', color: '#ffd93b', bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)' },
+// Helper to strictly ensure ONLY genuine real cards from friends are used
+export function isRealCard(c) {
+  if (!c) return false;
+  const author = (c.author || '').trim().toLowerCase();
+  const title = (c.title || '').trim().toLowerCase();
+  const desc = (c.description || c.message || '').trim().toLowerCase();
+  const id = String(c.id || '');
 
-  // Legendary cards
-  { id: 'card_15', slotId: 'A3', emoji: '⭐', title: 'SHOOTING STAR',      rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'A once-in-a-lifetime wonder. Your brightness lights up every room you enter!', color: '#ffd93b', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-  { id: 'card_16', slotId: 'B3', emoji: '🪄', title: 'MAGIC WAND',         rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'You make every normal day feel magical. Keep casting that cheerful spell!', color: '#ffd93b', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-  { id: 'card_17', slotId: 'C3', emoji: '💎', title: 'TIMELESS DIAMOND',   rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'Precious, strong, and sparkling under any pressure. A true gem.', color: '#5ee0ff', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-  { id: 'card_18', slotId: 'D3', emoji: '✨', title: 'SUPERNOVA SPARKLE',  rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'Nineteen years of pure sparkle! Here is to the bright future ahead.', color: '#ffd93b', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-  { id: 'card_19', slotId: 'G1', emoji: '👑', title: 'BIRTHDAY QUEEN',     rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'Crown on! Today and every day, you rule with grace, sass, and kindness.', color: '#ffd93b', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-  { id: 'card_20', slotId: 'G2', emoji: '🚀', title: 'COSMIC VOYAGER',     rarity: 'LEGENDARY', author: 'Birthday Crew', description: 'Your dreams have no gravity. Rocketing straight toward greatness!', color: '#ff80bf', bg: 'linear-gradient(135deg,#7a4010,#c07020)' },
-
-  // Mythic cards
-  { id: 'card_21', slotId: 'M1', emoji: '💖', title: 'BROTHER’S HEART',    rarity: 'MYTHIC',    author: 'Your Brother',  description: 'To the best sister in the universe: I am always in your corner, cheering you on. Happy 19th!', color: '#ff6eb4', bg: 'linear-gradient(135deg,#8b0032,#ff3385,#ffe066)' },
-  { id: 'card_22', slotId: 'M2', emoji: '🌟', title: 'INFINITE MUSKIVERSE', rarity: 'MYTHIC',   author: 'Birthday Crew', description: 'You created a universe of warmth, loyalty, and laughter for everyone around you.', color: '#ffe066', bg: 'linear-gradient(135deg,#4a0e4e,#8a2be2,#ffd700)' },
-  { id: 'card_23', slotId: 'M3', emoji: '🔥', title: 'NEVER-GIVE-UP SPIRIT',rarity: 'MYTHIC',   author: 'Birthday Crew', description: 'Fierce, brave, and full of heart. Nothing in this world can hold you back.', color: '#ff6b35', bg: 'linear-gradient(135deg,#801010,#d03020,#ffd040)' },
-  { id: 'card_24', slotId: 'M4', emoji: '🌈', title: 'THE GOLDEN CHAPTER', rarity: 'MYTHIC',    author: 'Birthday Crew', description: 'Turning 19 is where your golden story really begins. Cherish every single second!', color: '#5ee0ff', bg: 'linear-gradient(135deg,#1a2060,#00c9ff,#92fe9d)' },
-];
+  // Reject all fake generated authors
+  if (author === 'birthday crew' || author === 'secret admirer' || author === 'arcade band') return false;
+  if (author === 'system connection test') return false;
+  // Reject cards with "card_1" through "card_24" fake IDs
+  if (/^card_\d+$/.test(id)) return false;
+  // Reject test submissions created while testing
+  if (author === 'test' || author.startsWith('test ') || author.includes('tester') || author.includes('demo')) return false;
+  if (title === 'test' || title.includes('test card') || title.startsWith('test ')) return false;
+  if (desc === 'test' || desc.startsWith('test message') || desc.includes('testing card')) return false;
+  return true;
+}
 
 // ─── 2. Default Built-In Media Gallery ───────────────────────────────────────
-// Provides real photos of Muski, audio voice notes, and celebration snippets
+// Provides real photos of Muski (zero fake audio notes)
 export const BUILTIN_MEDIA = [
   {
     id: 'media_photo_1',
@@ -85,13 +73,6 @@ export const BUILTIN_MEDIA = [
     url: '/images/gallery/muski-puffy-glasses.jpg',
     author: 'Family',
   },
-  {
-    id: 'media_voice_1',
-    type: 'audio',
-    caption: 'Birthday Beat & Cheers 🎵',
-    author: 'Arcade Band',
-    isProcedural: true,
-  },
 ];
 
 // ─── 3. Default Built-In Stickers for Sticker Corner ─────────────────────────
@@ -102,19 +83,47 @@ export const BUILTIN_STICKERS = [
   { id: 'st_4', emoji: '🥺', url: '/images/faces/avatar-surprised.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-surprised.png?v=tight_nobg_v4', caption: 'Fish-Face Pout 🥺✨', author: 'Family ❤️', color: '#ff80bf' },
 ];
 
-// ─── 4. Storage Helpers (localStorage with IndexedDB fallback) ───────────────
+// ─── 4. Storage Helpers (localStorage with IndexedDB / safe fallback) ─────────
+export function safeSetItem(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (err) {
+    console.warn(`[safeSetItem quota notice on ${key}]`, err);
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed) && parsed.length > 2) {
+        // Keep newest 5 items to fit within strict 5MB quota
+        const trimmed = parsed.slice(0, 5);
+        localStorage.setItem(key, JSON.stringify(trimmed));
+      }
+    } catch (_) {}
+  }
+}
+
 export function getStoredCards() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY_CARDS) || '[]');
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CARDS) || '[]');
+    // Filter out all fake, placeholder, and test cards
+    const cleaned = raw.filter(isRealCard);
+    if (cleaned.length !== raw.length) {
+      safeSetItem(STORAGE_KEY_CARDS, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return [];
   }
 }
 
 export function saveStoredCard(card) {
+  if (!isRealCard(card)) return getStoredCards();
   const list = getStoredCards();
-  list.unshift(card);
-  localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(list));
+  const existsIdx = list.findIndex(c => c.id === card.id || (c.author === card.author && c.description === card.description));
+  if (existsIdx >= 0) {
+    list[existsIdx] = { ...list[existsIdx], ...card };
+  } else {
+    list.unshift(card);
+  }
+  safeSetItem(STORAGE_KEY_CARDS, JSON.stringify(list));
   return list;
 }
 
@@ -129,7 +138,7 @@ export function getStoredStickers() {
 export function saveStoredSticker(sticker) {
   const list = getStoredStickers();
   list.unshift(sticker);
-  localStorage.setItem(STORAGE_KEY_STICKERS, JSON.stringify(list));
+  safeSetItem(STORAGE_KEY_STICKERS, JSON.stringify(list));
   return list;
 }
 
@@ -144,7 +153,7 @@ export function getStoredVaultMessages() {
 export function saveStoredVaultMessage(msg) {
   const list = getStoredVaultMessages();
   list.unshift(msg);
-  localStorage.setItem(STORAGE_KEY_VAULT, JSON.stringify(list));
+  safeSetItem(STORAGE_KEY_VAULT, JSON.stringify(list));
   return list;
 }
 
@@ -159,18 +168,19 @@ export function getStoredMediaPool() {
 export function saveStoredMedia(mediaItem) {
   const list = getStoredMediaPool();
   list.unshift(mediaItem);
-  localStorage.setItem(STORAGE_KEY_MEDIA, JSON.stringify(list));
+  safeSetItem(STORAGE_KEY_MEDIA, JSON.stringify(list));
   return list;
 }
 
 // ─── 5. Universal Aggregation API ───────────────────────────────────────────
 
 /**
- * Returns all cards: built-in deck + all contributor submitted cards.
+ * Returns all cards: strictly genuine contributor submitted cards.
+ * Zero fake cards, zero test cards.
  */
 export function getAllCards() {
   const userCards = getStoredCards();
-  return [...userCards, ...BUILTIN_CARDS];
+  return userCards.filter(isRealCard);
 }
 
 /**
@@ -263,20 +273,22 @@ export async function saveContribution({
     // Also attempt Supabase insert in background if available
     try {
       if (supabase && typeof supabase.from === 'function') {
-        // Insert into public.contributions table
-        supabase.from('contributions').insert([{
+        const { error: sbErr } = await supabase.from('contributions').insert([{
           author: authorName,
           title: newCard.title,
           message: newCard.description,
           emoji: newCard.emoji,
           rarity: newCard.rarity,
           theme: cardTheme,
-          media: mediaFiles,
+          media: allocatedCardMedia,
           stickers: stickers,
           vault_note: vaultNote,
-        }]).then(() => {}).catch(() => {});
+        }]);
+        if (sbErr) console.warn('[supabase-insert-warn]', sbErr);
       }
-    } catch (_) {}
+    } catch (e) {
+      console.warn('[supabase-insert-catch]', e);
+    }
   }
 
   // 3. Save WhatsApp Stickers to the Sticker Corner
@@ -324,8 +336,17 @@ export async function syncCloudContributions() {
     const currentStickers = getStoredStickers();
     const currentVault = getStoredVaultMessages();
 
+    // Prune any fake built-in card IDs (card_1..card_24) from unlocked cards
+    try {
+      const rawUnlocked = JSON.parse(localStorage.getItem('muski_cards') || '[]');
+      const cleanUnlocked = rawUnlocked.filter(id => !/^card_\d+$/.test(id) && !String(id).includes('test'));
+      if (cleanUnlocked.length !== rawUnlocked.length) {
+        localStorage.setItem('muski_cards', JSON.stringify(cleanUnlocked));
+      }
+    } catch {}
+
     for (const c of data) {
-      if (c.author === 'System Connection Test') continue; // ignore automated test record
+      if (!isRealCard({ author: c.author, title: c.title, message: c.message, id: c.id })) continue;
 
       // 1. Sync Scratch Card
       if (c.message) {
@@ -352,7 +373,7 @@ export async function syncCloudContributions() {
           // Always ensure existing stored card has the contributor's real media and custom badge
           existingCard.mediaItems = mediaList;
           if (c.emoji) existingCard.emoji = c.emoji;
-          localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(currentCards));
+          safeSetItem(STORAGE_KEY_CARDS, JSON.stringify(currentCards));
         }
 
         // Auto-unlock contributor cards in localStorage so Muski can view and tap them anytime
