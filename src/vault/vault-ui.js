@@ -8,8 +8,10 @@
 
 import { SFX } from '@/engine/sound.js';
 import { getStoredVaultMessages } from '@/data/contribute-store.js';
+import { VAULT_SECRET_PASSWORD } from '@/config/constants.js';
 
-const ACCEPTED_PASSWORDS = ['2007', '19', 'muski', 'birthday', 'queen'];
+// Unique placeholder password for the Secret Vault
+export const VAULT_PLACEHOLDER_PASSWORD = VAULT_SECRET_PASSWORD;
 
 function injectCSS() {
   if (document.getElementById('vault-ui-css')) return;
@@ -132,7 +134,7 @@ export function mountVaultScreen(container, onExit) {
           SYSTEM: RESTRICTED ACCESS.<br>
           ENTER SECURITY CODE TO DECRYPT PRIVATE ARCHIVE:
         </div>
-        <input type="password" id="vault-pass-input" maxlength="20" placeholder="••••" autofocus />
+        <input type="password" id="vault-pass-input" maxlength="40" placeholder="ENTER CODE" autofocus />
         <div class="vault-btn-row">
           <button class="vault-btn" id="vault-submit-btn">UNLOCK</button>
           <button class="vault-btn" id="vault-cancel-btn">EXIT</button>
@@ -156,8 +158,9 @@ export function mountVaultScreen(container, onExit) {
   const statusText = document.getElementById('vault-status-text');
 
   function checkPassword() {
-    const val = (input.value || '').trim().toLowerCase();
-    const isOk = ACCEPTED_PASSWORDS.includes(val) || val.length >= 4; // Friendly unlock for Muski!
+    const val = (input.value || '').trim();
+    // Strictly require the exact unique placeholder password (case-insensitive)
+    const isOk = val.toLowerCase() === VAULT_PLACEHOLDER_PASSWORD.toLowerCase();
 
     if (isOk) {
       SFX.unlock();
@@ -172,7 +175,7 @@ export function mountVaultScreen(container, onExit) {
         statusText.textContent = 'SECURITY LOCKOUT. TERMINATING SESSION...';
         setTimeout(() => onExit?.(), 1800);
       } else {
-        statusText.innerHTML = `<span style="color:#ff3366">ACCESS DENIED (${5 - failedAttempts} tries left).</span><br>Try birth year or her name!`;
+        statusText.innerHTML = `<span style="color:#ff3366">ACCESS DENIED (${5 - failedAttempts} tries left).</span><br>Incorrect security code.`;
       }
     }
   }

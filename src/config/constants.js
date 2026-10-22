@@ -27,6 +27,8 @@ export const SECRET_SKIP_COINS = 5;
 export const CARD_COST_COINS = 3;
 
 // ─── Vault ───────────────────────────────────────────────────────────────────
+/** Unique placeholder password required to decrypt and unlock the Secret Vault */
+export const VAULT_SECRET_PASSWORD = 'MUSKI_SECRET_VAULT_2026';
 /** Number of wrong vault password attempts before silently returning to Boot */
 export const VAULT_MAX_ATTEMPTS = 5;
 /** Delay (ms) on a wrong vault attempt — mirrors server-side pg_sleep */
