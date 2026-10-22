@@ -193,11 +193,10 @@ export function openAvatarMaker(onSaved) {
         </div>
 
         <div class="av-btn-row">
-          <label class="av-upload-label">
+          <label class="av-upload-label" style="width: 100%; justify-content: center;">
             <span>📷</span> UPLOAD PHOTO
             <input type="file" id="av-file-input" class="av-file-input" accept="image/*" />
           </label>
-          <button class="av-reset-btn" id="av-reset-btn">RESET</button>
         </div>
 
         <div class="av-hint">
@@ -273,14 +272,6 @@ export function openAvatarMaker(onSaved) {
     } catch (err) {
       alert('Error processing photo: ' + err.message);
     }
-  });
-
-  // ── Reset Slot ─────────────────────────────────────────────────────────────
-  document.getElementById('av-reset-btn').addEventListener('click', () => {
-    removeAvatar(selectedSlot);
-    renderSlots();
-    updatePreview();
-    onSaved?.(selectedSlot);
   });
 
   // ── Close Modal ────────────────────────────────────────────────────────────
