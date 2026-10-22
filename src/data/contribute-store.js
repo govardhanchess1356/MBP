@@ -329,6 +329,8 @@ export async function syncCloudContributions() {
     const currentVault = getStoredVaultMessages();
 
     for (const c of data) {
+      if (c.author === 'System Connection Test') continue; // ignore automated test record
+
       // 1. Sync Scratch Card
       if (c.message) {
         const exists = currentCards.some(card => card.id === c.id || (card.author === c.author && card.description === c.message));
