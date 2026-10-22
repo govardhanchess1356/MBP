@@ -441,23 +441,6 @@ export function mountCountdown(container, unlockAt, serverOffsetMs, onUnlock) {
         <!-- Insert coin prompt -->
         <p id="cd-insert">👾 TAP ANYWHERE · INSERT COIN 👾</p>
 
-        <!-- Instant Dev / Preview Unlock Button -->
-        <button id="cd-dev-unlock-btn" style="
-          background: linear-gradient(135deg, #ffd93b, #c07020);
-          border: 2px solid #fff;
-          border-radius: 8px;
-          color: #1a0a2e;
-          font-family: inherit;
-          font-size: clamp(0.35rem, 2.5vw, 0.45rem);
-          padding: 10px 18px;
-          cursor: pointer;
-          margin-top: 6px;
-          box-shadow: 0 0 16px rgba(255,217,59,0.6);
-          letter-spacing: 0.04em;
-        ">
-          🔓 ENTER ARCADE (TEST / PREVIEW) ▶
-        </button>
-
       </div>
 
       <!-- 5. Mute button (always visible) -->
@@ -478,14 +461,6 @@ export function mountCountdown(container, unlockAt, serverOffsetMs, onUnlock) {
     const next = !getMuted();
     setMuted(next);
     muteBtn.textContent = next ? '🔇' : '🔊';
-  });
-
-  // ── Dev / Preview Instant Unlock ──────────────────────────────────────────
-  document.getElementById('cd-dev-unlock-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    localStorage.setItem('muski_dev_unlocked', 'true');
-    cleanup();
-    onUnlock();
   });
 
   // ── Tap feedback on screen ────────────────────────────────────────────────
