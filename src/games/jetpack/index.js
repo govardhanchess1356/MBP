@@ -194,27 +194,15 @@ function update(dt, input, engine) {
   // Clamp player X (stays fixed horizontally but guard anyway)
   _player.x = PLAYER_X;
 
-  // ── Collision with tunnel walls ───────────────────────────────────────────
+  // ── Collision with tunnel walls (safe ground running & ceiling bounce) ───
   const seg = getSegAtX(_player.x);
   if (_player.y - PLAYER_R < seg.ceilY) {
-    _state     = 'dead';
-    _deadTimer = 0;
-    engine.particles.burst(_player.x, _player.y, {
-      count: 18, colors: ['#ff6eb4', '#c9a0ff', '#fff'], speed: 4, size: 5,
-    });
-    engine.shake.shake(10, 400);
-    engine.SFX.explosion();
-    return;
+    _player.y = seg.ceilY + PLAYER_R;
+    _player.vy = Math.max(0, _player.vy);
   }
   if (_player.y + PLAYER_R > seg.floorY) {
-    _state     = 'dead';
-    _deadTimer = 0;
-    engine.particles.burst(_player.x, _player.y, {
-      count: 18, colors: ['#ff6eb4', '#c9a0ff', '#fff'], speed: 4, size: 5,
-    });
-    engine.shake.shake(10, 400);
-    engine.SFX.explosion();
-    return;
+    _player.y = seg.floorY - PLAYER_R;
+    _player.vy = 0;
   }
 
   // ── Coins ─────────────────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ export const CANVAS_H = 640;
 
 // ─── Coin System ─────────────────────────────────────────────────────────────
 /** Losses on a level before the engine silently enables easy mode */
-export const EASY_MODE_LOSS_THRESHOLD = 3;
+export const EASY_MODE_LOSS_THRESHOLD = 1;
 /** Coins awarded by Konami code and logo-tap Easter eggs */
 export const SECRET_SKIP_COINS = 5;
 /** Coin cost to dispense one scratch card from the vending machine */

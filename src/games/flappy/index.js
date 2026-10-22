@@ -223,19 +223,18 @@ function update(dt, input, engine) {
     return;
   }
 
-  // Ceiling
+  // Ceiling (soft clamp so player doesn't die from jumping high)
   if (_bird.y - BIRD_R < 0) {
     _bird.y = BIRD_R;
-    die(engine);
-    return;
+    _bird.vy = 0;
   }
 
-  // Pipes (circle vs rects, simple AABB with radius)
+  // Pipes (circle vs rects, generous hitbox with padding for fun play)
   for (const p of _pipes) {
-    const bLeft  = BIRD_X - BIRD_R + 4;   // shrink hitbox slightly
-    const bRight = BIRD_X + BIRD_R - 4;
-    const bTop   = _bird.y - BIRD_R + 4;
-    const bBot   = _bird.y + BIRD_R - 4;
+    const bLeft  = BIRD_X - BIRD_R + 8;
+    const bRight = BIRD_X + BIRD_R - 8;
+    const bTop   = _bird.y - BIRD_R + 8;
+    const bBot   = _bird.y + BIRD_R - 8;
 
     const pLeft  = p.x;
     const pRight = p.x + p.width;

@@ -129,7 +129,7 @@ export function mountBoss(container, state = {}, onComplete) {
 
     // In Phase 3: tap anywhere to charge wish
     if (boss.phase === 3) {
-      wishCharge = Math.min(100, wishCharge + 10);
+      wishCharge = Math.min(100, wishCharge + 20);
       SFX.coin();
     }
   }
@@ -188,15 +188,15 @@ export function mountBoss(container, state = {}, onComplete) {
       lastShoot = time;
     }
 
-    // Boss attacks
-    if (time - lastBossAttack > (boss.phase === 1 ? 900 : 600) && boss.phase < 3) {
+    // Boss attacks (slower, easy to dodge)
+    if (time - lastBossAttack > (boss.phase === 1 ? 1200 : 800) && boss.phase < 3) {
       lastBossAttack = time;
       if (boss.phase === 1) {
         // Falling alarm clocks
-        bossProjectiles.push({ x: Math.random() * (W - 40) + 20, y: 150, vy: 3.5, type: 'clock' });
+        bossProjectiles.push({ x: Math.random() * (W - 40) + 20, y: 150, vy: 2.2, type: 'clock' });
       } else {
         // Spark lasers & frosting bombs
-        bossProjectiles.push({ x: boss.x, y: boss.y + 30, vx: (Math.random() - 0.5) * 4, vy: 4.5, type: 'spark' });
+        bossProjectiles.push({ x: boss.x, y: boss.y + 30, vx: (Math.random() - 0.5) * 2.5, vy: 2.8, type: 'spark' });
       }
       SFX.flap();
     }
@@ -211,12 +211,12 @@ export function mountBoss(container, state = {}, onComplete) {
       if (p.vx) p.x += p.vx;
     });
 
-    // Bullet-Boss Collision
+    // Bullet-Boss Collision (player shots deal double damage)
     bullets.forEach(b => {
       const dist = Math.hypot(b.x - boss.x, b.y - boss.y);
       if (dist < boss.r + 10) {
         b.hit = true;
-        boss.hp = Math.max(0, boss.hp - 2.5);
+        boss.hp = Math.max(0, boss.hp - 5.0);
         SFX.hit();
         updateHealthBar();
       }

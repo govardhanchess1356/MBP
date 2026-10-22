@@ -96,11 +96,10 @@ export const BUILTIN_MEDIA = [
 
 // ─── 3. Default Built-In Stickers for Sticker Corner ─────────────────────────
 export const BUILTIN_STICKERS = [
-  { id: 'st_1', emoji: '👑', url: '/images/faces/avatar-happy.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-happy.png?v=tight_nobg_v4', caption: 'Level 19 Princess 👑💖', author: 'Your Brother ❤️', color: '#ffd93b' },
+  { id: 'st_1', emoji: '🌸', url: '/images/faces/avatar-default.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-default.png?v=tight_nobg_v4', caption: 'Sweetest Smile 🌸', author: 'Birthday Crew ✨', color: '#ff6eb4' },
   { id: 'st_2', emoji: '😎', url: '/images/faces/avatar-cool.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-cool.png?v=tight_nobg_v4', caption: 'Swag Queen Muski 😎', author: 'Your Brother ❤️', color: '#5ee0ff' },
   { id: 'st_3', emoji: '♨️', url: '/images/faces/avatar-grumpy.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-grumpy.png?v=tight_nobg_v4', caption: 'Cooker Anger Mode! ♨️😂', author: 'Meme Corner 🤣', color: '#ff4d4d' },
   { id: 'st_4', emoji: '🥺', url: '/images/faces/avatar-surprised.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-surprised.png?v=tight_nobg_v4', caption: 'Fish-Face Pout 🥺✨', author: 'Family ❤️', color: '#ff80bf' },
-  { id: 'st_5', emoji: '🌸', url: '/images/faces/avatar-default.png?v=tight_nobg_v4', imageUrl: '/images/faces/avatar-default.png?v=tight_nobg_v4', caption: 'Sweetest Smile 🌸', author: 'Birthday Crew ✨', color: '#ff6eb4' },
 ];
 
 // ─── 4. Storage Helpers (localStorage with IndexedDB fallback) ───────────────

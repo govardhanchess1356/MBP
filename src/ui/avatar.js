@@ -17,14 +17,10 @@
  */
 
 export const EXPRESSION_SLOTS = [
-  { id: 'default',   label: 'Normal',    desc: 'Sweet smile portrait (Real photo 🌸)' },
-  { id: 'happy',     label: 'Happy',     desc: 'Celebration smile (Real photo 💖)' },
-  { id: 'cool',      label: 'Cool',      desc: 'Cap & aviator sunglasses (Real photo 😎)' },
-  { id: 'grumpy',    label: 'Grumpy',    desc: 'Pressure cooker meme face (Real photo ♨️)' },
-  { id: 'surprised', label: 'Surprised', desc: 'Round glasses & puffed cheeks (Real photo 🥺)' },
-  { id: 'wink',      label: 'Wink',      desc: 'Cap & sunglasses smirk (Real photo ✨)' },
-  { id: 'laugh',     label: 'Laughing',  desc: 'Joyful celebration smile (Real photo 🥳)' },
-  { id: 'star_eyes', label: 'Star Eyes', desc: 'Victory celebration (Real photo 🌟)' },
+  { id: 'default',   label: 'Normal',    desc: 'Sweet smile portrait (Photo 1 🌸)' },
+  { id: 'cool',      label: 'Cool',      desc: 'Cap & aviator sunglasses (Photo 2 😎)' },
+  { id: 'grumpy',    label: 'Grumpy',    desc: 'Pressure cooker meme face (Photo 3 ♨️)' },
+  { id: 'surprised', label: 'Surprised', desc: 'Round glasses & puffed cheeks (Photo 4 🥺)' },
 ];
 
 export const RETRO_PALETTE_HEX = [
@@ -36,13 +32,17 @@ export const RETRO_PALETTE_HEX = [
 
 export const BUILTIN_CARTOON_AVATARS = {
   default:   '/images/faces/avatar-default.png?v=tight_nobg_v4',
-  happy:     '/images/faces/avatar-happy.png?v=tight_nobg_v4',
   cool:      '/images/faces/avatar-cool.png?v=tight_nobg_v4',
   grumpy:    '/images/faces/avatar-grumpy.png?v=tight_nobg_v4',
   surprised: '/images/faces/avatar-surprised.png?v=tight_nobg_v4',
-  wink:      '/images/faces/avatar-wink.png?v=tight_nobg_v4',
-  laugh:     '/images/faces/avatar-laugh.png?v=tight_nobg_v4',
-  star_eyes: '/images/faces/avatar-star_eyes.png?v=tight_nobg_v4',
+};
+
+// Aliases for legacy game code: map duplicates to the 4 canonical avatars
+export const AVATAR_ALIASES = {
+  happy:     'default',
+  laugh:     'default',
+  star_eyes: 'default',
+  wink:      'cool',
 };
 
 // Convert hex palette to RGB triplets for Euclidean distance color quantization
@@ -211,6 +211,7 @@ export function removeAvatar(slotId) {
  * Returns custom uploaded photo if saved, otherwise returns custom cartoon avatar image.
  */
 export function getCustomAvatarSprite(slotId = 'default') {
+  slotId = AVATAR_ALIASES[slotId] || slotId;
   if (_spriteCache.has(slotId)) {
     return _spriteCache.get(slotId);
   }
@@ -245,6 +246,7 @@ export function getCustomAvatarSprite(slotId = 'default') {
  * Uses high-res custom cartoon avatar image, with fallback to vector cartoon renderer.
  */
 export function drawAvatar(ctx, cx, cy, r, expression = 'default') {
+  expression = AVATAR_ALIASES[expression] || expression;
   const sprite = getCustomAvatarSprite(expression);
 
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {

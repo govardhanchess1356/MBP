@@ -153,7 +153,7 @@ function update(dt, input, engine) {
   _spawnDist += dx;
   if (_spawnDist >= _nextSpawn) {
     _spawnDist = 0;
-    _nextSpawn = 130 + Math.random() * 110;
+    _nextSpawn = 220 + Math.random() * 120; // more spaced out for relaxed timing
 
     const isBird = _config.birdsEnabled && Math.random() < 0.28;
     if (isBird) {

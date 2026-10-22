@@ -139,9 +139,9 @@ function update(dt, input, engine) {
     return r.x > -m && r.x < W + m && r.y > -m && r.y < H + m;
   });
 
-  // ── Auto-fire ──────────────────────────────────────────────────────────────
+  // ── Auto-fire (fast responsive shots) ──────────────────────────────────────
   _fireTimer += dt;
-  if (_fireTimer >= 380 && _rocks.length > 0) {
+  if (_fireTimer >= 240 && _rocks.length > 0) {
     _fireTimer = 0;
     fireAtNearest();
     engine.SFX.shoot();
@@ -200,7 +200,7 @@ function update(dt, input, engine) {
   // ── Rock ↔ ship collision ──────────────────────────────────────────────────
   for (const rock of _rocks) {
     const dx = _ship.x - rock.x, dy = _ship.y - rock.y;
-    if (dx * dx + dy * dy < (rock.r + 17) ** 2) {
+    if (dx * dx + dy * dy < (rock.r + 9) ** 2) {
       _st = 'dead';
       engine.shake.shake(10, 500);
       engine.SFX.hit();
