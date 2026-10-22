@@ -268,14 +268,18 @@ export async function saveContribution({
     // Also attempt Supabase insert in background if available
     try {
       if (supabase && typeof supabase.from === 'function') {
-        supabase.from('cards').insert({
+        // Insert into public.contributions table
+        supabase.from('contributions').insert([{
+          author: authorName,
           title: newCard.title,
           message: newCard.description,
           emoji: newCard.emoji,
-          scratch_color: 'gold',
-          card_theme: cardTheme,
-          status: 'approved',
-        }).then(() => {}).catch(() => {});
+          rarity: newCard.rarity,
+          theme: cardTheme,
+          media: mediaFiles,
+          stickers: stickers,
+          vault_note: vaultNote,
+        }]).then(() => {}).catch(() => {});
       }
     } catch (_) {}
   }
@@ -305,4 +309,85 @@ export async function saveContribution({
   }
 
   return { success: true, cardId: cid };
+}
+
+// ─── 6. Cloud Sync from Supabase ─────────────────────────────────────────────
+/**
+ * Automatically fetch and merge cloud contributions submitted by friends from other devices.
+ */
+export async function syncCloudContributions() {
+  if (!supabase || typeof supabase.from !== 'function') return;
+  try {
+    const { data, error } = await supabase
+      .from('contributions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data || !Array.isArray(data)) return;
+
+    const currentCards = getStoredCards();
+    const currentStickers = getStoredStickers();
+    const currentVault = getStoredVaultMessages();
+
+    for (const c of data) {
+      // 1. Sync Scratch Card
+      if (c.message) {
+        const exists = currentCards.some(card => card.id === c.id || (card.author === c.author && card.description === c.message));
+        if (!exists) {
+          saveStoredCard({
+            id: c.id,
+            slotId: 'C_' + String(c.id).slice(0, 4),
+            emoji: c.emoji || '🎂',
+            title: (c.title || `WISH FROM ${c.author.toUpperCase()}`).toUpperCase(),
+            description: c.message,
+            author: c.author,
+            rarity: c.rarity || 'RARE',
+            color: '#c9a0ff',
+            bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)',
+            mediaItems: Array.isArray(c.media) && c.media.length ? c.media : getRandomMediaForCard(2),
+            createdAt: c.created_at,
+          });
+        }
+      }
+
+      // 2. Sync Stickers
+      if (Array.isArray(c.stickers)) {
+        for (const st of c.stickers) {
+          const stId = 'st_cloud_' + (st.id || Math.random().toString(36).slice(2, 7));
+          const existsSt = currentStickers.some(s => s.id === stId || (s.author === c.author && s.caption === st.caption));
+          if (!existsSt) {
+            saveStoredSticker({
+              id: stId,
+              url: st.dataUrl || st.url,
+              emoji: st.emoji || '🌸',
+              caption: st.caption || `${c.author}'s sticker`,
+              author: c.author,
+              createdAt: c.created_at,
+            });
+          }
+        }
+      }
+
+      // 3. Sync Vault Notes
+      if (c.vault_note) {
+        const vId = 'v_' + c.id;
+        const existsV = currentVault.some(v => v.id === vId || (v.author === c.author && v.message === c.vault_note));
+        if (!existsV) {
+          saveStoredVaultMessage({
+            id: vId,
+            author: c.author,
+            message: c.vault_note,
+            createdAt: c.created_at,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[contribute-store] Cloud sync skipped (offline or not configured)');
+  }
+}
+
+// Background sync on load
+if (typeof window !== 'undefined') {
+  syncCloudContributions().catch(() => {});
 }

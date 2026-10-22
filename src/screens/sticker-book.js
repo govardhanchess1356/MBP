@@ -5,7 +5,7 @@
  * Interactive sticker wall with tap zoom, contributor signatures, reactions, and sound effects.
  */
 
-import { getAllStickers } from '@/data/contribute-store.js';
+import { getAllStickers, syncCloudContributions } from '@/data/contribute-store.js';
 import { SFX } from '@/engine/sound.js';
 
 function injectCSS() {
@@ -189,6 +189,7 @@ function injectCSS() {
 
 export function mountStickerBook(container, { onHome } = {}) {
   injectCSS();
+  syncCloudContributions().catch(() => {});
 
   const stickers = getAllStickers();
 

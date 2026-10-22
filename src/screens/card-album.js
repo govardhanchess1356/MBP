@@ -7,7 +7,7 @@
  */
 
 import { getCardsUnlocked } from '@/data/local-state.js';
-import { getAllCards, getRandomMediaForCard } from '@/data/contribute-store.js';
+import { getAllCards, getRandomMediaForCard, syncCloudContributions } from '@/data/contribute-store.js';
 
 const RARITY_ORDER = { MYTHIC: 0, LEGENDARY: 1, RARE: 2, COMMON: 3 };
 const RARITY_LABEL = {
@@ -217,6 +217,7 @@ function injectCSS() {
 
 export function mountCardAlbum(container, { onHome } = {}) {
   injectCSS();
+  syncCloudContributions().catch(() => {});
 
   const allCards = getAllCards();
   const collectedIds = new Set(getCardsUnlocked());
