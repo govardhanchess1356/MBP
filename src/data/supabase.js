@@ -49,6 +49,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY) {
         },
       },
     });
+    console.log('[muski-birthday] 🟢 Connected to Supabase Cloud:', SUPABASE_URL);
   } catch (err) {
     console.warn('[muski-birthday] Failed to initialize Supabase client:', err);
   }

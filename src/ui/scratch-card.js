@@ -249,6 +249,10 @@ export function showScratchCard(_container, cardData = {}, onDone) {
   injectCSS();
 
   const emoji  = cardData.emoji       || '🎁';
+  const isImgBadge = typeof emoji === 'string' && (emoji.startsWith('data:') || emoji.startsWith('http') || emoji.startsWith('/'));
+  const badgeHTML = isImgBadge
+    ? `<img src="${emoji}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid #ffd93b;box-shadow:0 0 12px rgba(255,217,59,0.5);margin:0 auto;" alt="Card Badge" />`
+    : emoji;
   const title  = cardData.title       || 'HAPPY 19TH BIRTHDAY!';
   const desc   = cardData.description || 'Special memory from the Prize Machine ✨';
   const author = cardData.author      || 'Secret Admirer';
@@ -268,7 +272,7 @@ export function showScratchCard(_container, cardData = {}, onDone) {
     <div id="sc-wrapper">
       <div id="sc-face" style="background:${bg}">
         <div id="sc-rarity-badge" style="color:${rarity.color}">${rarity.label}</div>
-        <div id="sc-emoji">${emoji}</div>
+        <div id="sc-emoji">${badgeHTML}</div>
         <div id="sc-title">${title}</div>
         <div id="sc-author">From: ${author} 💌</div>
         <div id="sc-desc">${desc}</div>

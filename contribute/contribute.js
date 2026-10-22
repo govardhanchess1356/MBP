@@ -345,11 +345,26 @@ function renderForm() {
         </div>
 
         <div class="c-field">
-          <label class="c-label">CHOOSE CARD EMOJI:</label>
+          <label class="c-label">CHOOSE CARD EMOJI OR CUSTOM PHOTO BADGE:</label>
           <div class="c-emoji-grid" id="c-emoji-picker">
             ${EMOJIS.map(em => `
               <button type="button" class="c-emoji-btn ${em === selectedEmoji ? 'active' : ''}" data-emoji="${em}">${em}</button>
             `).join('')}
+          </div>
+
+          <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(255,110,180,0.5); border-radius: 8px;">
+            <div style="font-size:0.28rem; color:#ffd93b; margin-bottom:6px;">OR UPLOAD A PHOTO AS CARD BADGE:</div>
+            <label style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:0.32rem; padding:8px 14px; background:linear-gradient(135deg,#ff6eb4,#a53860); border:1.5px solid #ffd93b; border-radius:6px; color:#fff;">
+              <span>🖼️</span> UPLOAD PHOTO AS BADGE
+              <input type="file" id="c-badge-photo-input" accept="image/*" style="display:none;" />
+            </label>
+            <div id="c-badge-preview-wrap" style="display:none; margin-top:10px; align-items:center; gap:10px;">
+              <img id="c-badge-custom-img" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid #ffd93b; box-shadow:0 0 10px rgba(255,217,59,0.5);" />
+              <div>
+                <div style="font-size:0.28rem; color:#5effa3;">CUSTOM PHOTO BADGE ACTIVE ✓</div>
+                <button type="button" id="c-badge-remove-btn" style="background:none; border:none; color:#FFA5AB; font-size:0.26rem; cursor:pointer; text-decoration:underline; margin-top:2px;">✕ Revert to Emoji</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -425,12 +440,41 @@ function renderForm() {
 
 function bindEvents() {
   // Emoji Selection
+  const badgeInput = document.getElementById('c-badge-photo-input');
+  const badgeWrap = document.getElementById('c-badge-preview-wrap');
+  const badgeImg = document.getElementById('c-badge-custom-img');
+  const badgeRemove = document.getElementById('c-badge-remove-btn');
+
   document.getElementById('c-emoji-picker')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.c-emoji-btn');
     if (!btn) return;
     document.querySelectorAll('.c-emoji-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedEmoji = btn.dataset.emoji;
+    if (badgeWrap) badgeWrap.style.display = 'none';
+    if (badgeInput) badgeInput.value = '';
+  });
+
+  // Custom Badge Photo Upload
+  badgeInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      selectedEmoji = ev.target.result;
+      document.querySelectorAll('.c-emoji-btn').forEach(b => b.classList.remove('active'));
+      if (badgeImg) badgeImg.src = selectedEmoji;
+      if (badgeWrap) badgeWrap.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  badgeRemove?.addEventListener('click', () => {
+    selectedEmoji = '🎂';
+    if (badgeWrap) badgeWrap.style.display = 'none';
+    if (badgeInput) badgeInput.value = '';
+    const defaultBtn = document.querySelector('.c-emoji-btn[data-emoji="🎂"]');
+    if (defaultBtn) defaultBtn.classList.add('active');
   });
 
   // Theme Selection

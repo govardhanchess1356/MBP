@@ -257,10 +257,14 @@ export function mountCardAlbum(container, { onHome } = {}) {
           const cardKey = card.slotId || card.id;
           const has = collectedIds.has(cardKey);
           const rl = RARITY_LABEL[card.rarity] || RARITY_LABEL.RARE;
-          return /* html */`
+            const isImg = typeof card.emoji === 'string' && (card.emoji.startsWith('data:') || card.emoji.startsWith('http') || card.emoji.startsWith('/'));
+            const emojiHtml = isImg
+              ? `<img src="${card.emoji}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid #ffd93b;" alt="Badge" />`
+              : card.emoji;
+            return /* html */`
             <div class="album-card ${has ? 'collected' : 'empty'}" data-card-id="${cardKey}"
                  style="${has ? `background:${card.bg}` : ''}">
-              <div class="album-card-emoji">${card.emoji}</div>
+              <div class="album-card-emoji">${emojiHtml}</div>
               <div class="album-card-label">${has ? card.title : '???'}</div>
               ${has && card.author ? `<div class="album-card-author">${card.author}</div>` : ''}
               ${has ? `<div class="album-card-rarity" style="color:${rl.color}">${rl.label}</div>` : ''}
@@ -302,7 +306,12 @@ export function mountCardAlbum(container, { onHome } = {}) {
     if (!modal || !detailCard) return;
 
     detailCard.style.background = card.bg;
-    document.getElementById('album-detail-emoji').textContent  = card.emoji;
+    const detailEmojiEl = document.getElementById('album-detail-emoji');
+    if (typeof card.emoji === 'string' && (card.emoji.startsWith('data:') || card.emoji.startsWith('http') || card.emoji.startsWith('/'))) {
+      detailEmojiEl.innerHTML = `<img src="${card.emoji}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2.5px solid #ffd93b;box-shadow:0 0 14px rgba(255,217,59,0.5);" alt="Badge" />`;
+    } else {
+      detailEmojiEl.textContent = card.emoji || '🎂';
+    }
     document.getElementById('album-detail-title').textContent  = card.title;
     document.getElementById('album-detail-author').textContent = card.author ? `From: ${card.author} 💌` : '';
     document.getElementById('album-detail-desc').textContent   = card.description;
