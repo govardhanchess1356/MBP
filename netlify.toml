@@ -1,0 +1,40 @@
+# ─── Build ───────────────────────────────────────────────────────────────────
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# ─── SPA routing — each entry point handles its own sub-routes ───────────────
+[[redirects]]
+  from   = "/admin"
+  to     = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/admin/*"
+  to     = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/contribute"
+  to     = "/contribute/index.html"
+  status = 200
+
+# Fallback: all other paths → main SPA (countdown / arcade hall)
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ─── Security headers ─────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options         = "DENY"
+    X-Content-Type-Options  = "nosniff"
+    Referrer-Policy         = "no-referrer"
+    Permissions-Policy      = "camera=(), microphone=(), geolocation=()"
+    # CSP: allow Supabase API/WS, Google Fonts, self assets, data/blob URIs for canvas
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:;"

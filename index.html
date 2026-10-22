@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#450920" />
+  <!-- Keep site hidden from search engines — it's a private surprise -->
+  <meta name="robots" content="noindex, nofollow" />
+  <!-- No name in <title> — pre-unlock, the page must reveal nothing -->
+  <title>🎂</title>
+
+  <!-- Retro pixel fonts from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #06021a;        /* deep cosmic purple — matches MuskiVERSE bg */
+    }
+
+    body {
+      font-family: 'VT323', monospace;
+      -webkit-tap-highlight-color: transparent;
+      /* touch-action NOT set globally — countdown + boot screens need tap events.
+         Game canvas sets touch-action:none on itself in Phase 3. */
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* ── Pixel rendering for canvas & sprites ───────────────────────── */
+    canvas, img {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* ── Respect prefers-reduced-motion — zero out all animation ──── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration:        0.01ms !important;
+        animation-iteration-count: 1      !important;
+        transition-duration:       0.01ms !important;
+        scroll-behavior:           auto   !important;
+      }
+    }
+
+    /* ── CRT scanline overlay (Phase 2 activates via JS class) ─────── */
+    /* Defined here so it's always available without extra network round-trip */
+    .crt::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent           0px,
+        transparent           2px,
+        rgba(0, 0, 0, 0.08)   2px,
+        rgba(0, 0, 0, 0.08)   4px
+      );
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
