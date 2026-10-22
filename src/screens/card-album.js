@@ -183,24 +183,77 @@ function injectCSS() {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 6px;
+      gap: 12px;
+      margin-top: 8px;
     }
-    .album-modal-media img {
+    .album-media-header {
+      font-size: 0.26rem;
+      color: #ffd93b;
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed rgba(255,217,59,0.3);
+    }
+    .album-media-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       width: 100%;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.2);
-      max-height: 160px;
-      object-fit: cover;
+    }
+    .album-media-card {
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      border: 1.5px solid rgba(255,217,59,0.35);
+      border-radius: 10px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .album-media-badge {
+      font-size: 0.2rem;
+      color: #ffd93b;
+      background: rgba(69,9,32,0.85);
+      border: 1px solid rgba(255,217,59,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      align-self: flex-start;
+    }
+    .album-media-photo {
+      width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #000;
+      cursor: zoom-in;
+      display: block;
     }
     .album-modal-voice {
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.5);
       border: 1.5px solid #ff6eb4;
       border-radius: 8px;
-      padding: 8px;
+      padding: 8px 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    /* Lightbox Fullscreen Zoom Overlay */
+    #album-lightbox {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      display: none; align-items: center; justify-content: center;
+      padding: 12px;
+      cursor: zoom-out;
+    }
+    #album-lightbox.active { display: flex; }
+    #album-lightbox img {
+      max-width: 96vw; max-height: 94vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 2px solid #ffd93b;
+      box-shadow: 0 0 30px rgba(255,217,59,0.4);
     }
 
     #album-detail-close {
@@ -217,173 +270,253 @@ function injectCSS() {
 
 export function mountCardAlbum(container, { onHome } = {}) {
   injectCSS();
-  syncCloudContributions().catch(() => {});
 
-  const allCards = getAllCards();
-  const collectedIds = new Set(getCardsUnlocked());
+  function renderView() {
+    const allCards = getAllCards();
+    const collectedIds = new Set(getCardsUnlocked());
 
-  // Sort: collected first, then by rarity
-  const sorted = [...allCards].sort((a, b) => {
-    const aHas = collectedIds.has(a.slotId || a.id);
-    const bHas = collectedIds.has(b.slotId || b.id);
-    if (aHas && !bHas) return -1;
-    if (!aHas && bHas) return 1;
-    return (RARITY_ORDER[a.rarity] ?? 2) - (RARITY_ORDER[b.rarity] ?? 2);
-  });
+    // Automatically ensure all contributor cards are unlocked so Muski can read them!
+    allCards.forEach(c => {
+      const isContrib = (c.author && c.author !== 'Birthday Crew' && c.author !== 'Secret Admirer') ||
+                        c.slotId?.startsWith('C_') || c.slotId?.startsWith('U_');
+      if (isContrib) {
+        collectedIds.add(c.slotId || c.id);
+        if (c.id) collectedIds.add(c.id);
+      }
+    });
 
-  const collectedCount = sorted.filter(c => collectedIds.has(c.slotId || c.id)).length;
-  const mythicCount    = sorted.filter(c => collectedIds.has(c.slotId || c.id) && c.rarity === 'MYTHIC').length;
-  const legendaryCount = sorted.filter(c => collectedIds.has(c.slotId || c.id) && c.rarity === 'LEGENDARY').length;
-  const rareCount      = sorted.filter(c => collectedIds.has(c.slotId || c.id) && c.rarity === 'RARE').length;
-  const commonCount    = sorted.filter(c => collectedIds.has(c.slotId || c.id) && c.rarity === 'COMMON').length;
+    // Sort: collected first, then by rarity
+    const sorted = [...allCards].sort((a, b) => {
+      const aKey = a.slotId || a.id;
+      const bKey = b.slotId || b.id;
+      const aHas = collectedIds.has(aKey) || collectedIds.has(a.id);
+      const bHas = collectedIds.has(bKey) || collectedIds.has(b.id);
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      return (RARITY_ORDER[a.rarity] ?? 2) - (RARITY_ORDER[b.rarity] ?? 2);
+    });
 
-  container.innerHTML = /* html */`
-    <div id="album-screen">
-      <div id="album-topbar">
-        <button id="album-back">🏠</button>
-        <div id="album-title">📖 CARD ALBUM</div>
-        <div id="album-count">${collectedCount}/${allCards.length}</div>
-      </div>
+    const collectedCount = sorted.filter(c => collectedIds.has(c.slotId || c.id) || collectedIds.has(c.id)).length;
+    const mythicCount    = sorted.filter(c => (collectedIds.has(c.slotId || c.id) || collectedIds.has(c.id)) && c.rarity === 'MYTHIC').length;
+    const legendaryCount = sorted.filter(c => (collectedIds.has(c.slotId || c.id) || collectedIds.has(c.id)) && c.rarity === 'LEGENDARY').length;
+    const rareCount      = sorted.filter(c => (collectedIds.has(c.slotId || c.id) || collectedIds.has(c.id)) && c.rarity === 'RARE').length;
+    const commonCount    = sorted.filter(c => (collectedIds.has(c.slotId || c.id) || collectedIds.has(c.id)) && c.rarity === 'COMMON').length;
 
-      <div id="album-stats">
-        <div class="album-stat">👑 MYTHIC <span>${mythicCount}</span></div>
-        <div class="album-stat">✨ LEGENDARY <span>${legendaryCount}</span></div>
-        <div class="album-stat">💜 RARE <span>${rareCount}</span></div>
-        <div class="album-stat">🌸 COMMON <span>${commonCount}</span></div>
-      </div>
+    container.innerHTML = /* html */`
+      <div id="album-screen">
+        <div id="album-topbar">
+          <button id="album-back">🏠</button>
+          <div id="album-title">📖 CARD ALBUM</div>
+          <div id="album-count">${collectedCount}/${allCards.length}</div>
+        </div>
 
-      <div id="album-grid">
-        ${sorted.map(card => {
-          const cardKey = card.slotId || card.id;
-          const has = collectedIds.has(cardKey);
-          const rl = RARITY_LABEL[card.rarity] || RARITY_LABEL.RARE;
+        <div id="album-stats">
+          <div class="album-stat">👑 MYTHIC <span>${mythicCount}</span></div>
+          <div class="album-stat">✨ LEGENDARY <span>${legendaryCount}</span></div>
+          <div class="album-stat">💜 RARE <span>${rareCount}</span></div>
+          <div class="album-stat">🌸 COMMON <span>${commonCount}</span></div>
+        </div>
+
+        <div id="album-grid">
+          ${sorted.map(card => {
+            const cardKey = card.slotId || card.id;
+            const isContrib = (card.author && card.author !== 'Birthday Crew' && card.author !== 'Secret Admirer') ||
+                              card.slotId?.startsWith('C_') || card.slotId?.startsWith('U_');
+            const has = isContrib || collectedIds.has(cardKey) || collectedIds.has(card.id);
+            const rl = RARITY_LABEL[card.rarity] || RARITY_LABEL.RARE;
             const isImg = typeof card.emoji === 'string' && (card.emoji.startsWith('data:') || card.emoji.startsWith('http') || card.emoji.startsWith('/'));
             const emojiHtml = isImg
               ? `<img src="${card.emoji}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid #ffd93b;" alt="Badge" />`
               : card.emoji;
             return /* html */`
-            <div class="album-card ${has ? 'collected' : 'empty'}" data-card-id="${cardKey}"
-                 style="${has ? `background:${card.bg}` : ''}">
-              <div class="album-card-emoji">${emojiHtml}</div>
-              <div class="album-card-label">${has ? card.title : '???'}</div>
-              ${has && card.author ? `<div class="album-card-author">${card.author}</div>` : ''}
-              ${has ? `<div class="album-card-rarity" style="color:${rl.color}">${rl.label}</div>` : ''}
-              ${!has ? '<div class="album-lock">🔒</div>' : ''}
-            </div>
-          `;
-        }).join('')}
-      </div>
+              <div class="album-card ${has ? 'collected' : 'empty'}" data-card-id="${cardKey}"
+                   style="${has ? `background:${card.bg}` : ''}">
+                <div class="album-card-emoji">${emojiHtml}</div>
+                <div class="album-card-label">${has ? card.title : '???'}</div>
+                ${has && card.author ? `<div class="album-card-author">${card.author}</div>` : ''}
+                ${has ? `<div class="album-card-rarity" style="color:${rl.color}">${rl.label}</div>` : ''}
+                ${!has ? '<div class="album-lock">🔒</div>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
 
-      <!-- Detail Modal -->
-      <div id="album-detail">
-        <div id="album-detail-card">
-          <div id="album-detail-emoji"></div>
-          <div id="album-detail-title"></div>
-          <div id="album-detail-author"></div>
-          <div id="album-detail-desc"></div>
-          <div id="album-detail-rarity"></div>
-          <div class="album-modal-media" id="album-modal-media"></div>
-          <button id="album-detail-close">← CLOSE</button>
+        <!-- Detail Modal -->
+        <div id="album-detail">
+          <div id="album-detail-card">
+            <div id="album-detail-emoji"></div>
+            <div id="album-detail-title"></div>
+            <div id="album-detail-author"></div>
+            <div id="album-detail-desc"></div>
+            <div id="album-detail-rarity"></div>
+            <div class="album-modal-media" id="album-modal-media"></div>
+            <button id="album-detail-close">← CLOSE</button>
+          </div>
+        </div>
+
+        <!-- Fullscreen Zoom Lightbox -->
+        <div id="album-lightbox">
+          <img id="album-lightbox-img" src="" alt="Zoom" />
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  // Back
-  document.getElementById('album-back')?.addEventListener('click', () => onHome?.());
+    bindAlbumEvents();
+  }
 
-  // Tap Card → Show Multi-Media Modal
-  document.getElementById('album-grid')?.addEventListener('click', (e) => {
-    const tile = e.target.closest('.album-card');
-    if (!tile || tile.classList.contains('empty')) return;
-    const cid = tile.dataset.cardId;
-    const card = allCards.find(c => (c.slotId || c.id) === cid);
-    if (!card) return;
+  function bindAlbumEvents() {
+    // Back button
+    document.getElementById('album-back')?.addEventListener('click', () => onHome?.());
 
-    const rl = RARITY_LABEL[card.rarity] || RARITY_LABEL.RARE;
-    const modal = document.getElementById('album-detail');
-    const detailCard = document.getElementById('album-detail-card');
-    if (!modal || !detailCard) return;
+    // Tap Card → Instant Responsive Feedback (No 5-click delay)
+    document.getElementById('album-grid')?.addEventListener('click', (e) => {
+      const tile = e.target.closest('.album-card');
+      if (!tile) return;
+      const cid = tile.dataset.cardId;
+      const currentAll = getAllCards();
+      const card = currentAll.find(c => (c.slotId || c.id) === cid || c.id === cid);
+      if (!card) return;
 
-    detailCard.style.background = card.bg;
-    const detailEmojiEl = document.getElementById('album-detail-emoji');
-    if (typeof card.emoji === 'string' && (card.emoji.startsWith('data:') || card.emoji.startsWith('http') || card.emoji.startsWith('/'))) {
-      detailEmojiEl.innerHTML = `<img src="${card.emoji}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2.5px solid #ffd93b;box-shadow:0 0 14px rgba(255,217,59,0.5);" alt="Badge" />`;
-    } else {
-      detailEmojiEl.textContent = card.emoji || '🎂';
-    }
-    document.getElementById('album-detail-title').textContent  = card.title;
-    document.getElementById('album-detail-author').textContent = card.author ? `From: ${card.author} 💌` : '';
-    document.getElementById('album-detail-desc').textContent   = card.description;
+      const modal = document.getElementById('album-detail');
+      const detailCard = document.getElementById('album-detail-card');
+      const rarityEl = document.getElementById('album-detail-rarity');
+      const mediaContainer = document.getElementById('album-modal-media');
+      if (!modal || !detailCard || !rarityEl || !mediaContainer) return;
 
-    const rarityEl = document.getElementById('album-detail-rarity');
-    rarityEl.textContent = rl.label;
-    rarityEl.style.color = rl.color;
-    rarityEl.style.background = 'rgba(0,0,0,0.3)';
+      const isLocked = tile.classList.contains('empty');
 
-    // Multi-Media
-    const mediaContainer = document.getElementById('album-modal-media');
-    let mediaItems = card.mediaItems;
-    if (!mediaItems || mediaItems.length === 0) {
-      mediaItems = getRandomMediaForCard(2);
-    }
+      if (isLocked) {
+        // Locked card preview
+        detailCard.style.background = 'linear-gradient(135deg, #1f082e, #0c0218)';
+        document.getElementById('album-detail-emoji').textContent = '🔒';
+        document.getElementById('album-detail-title').textContent = card.title || 'LOCKED REWARD CARD';
+        document.getElementById('album-detail-author').textContent = 'Prize Machine Reward';
+        document.getElementById('album-detail-desc').textContent = 'Play the arcade games to earn coins, then spin the Slot Machine to unlock this collectible card!';
+        rarityEl.textContent = '🔒 LOCKED';
+        rarityEl.style.color = '#FFA5AB';
+        rarityEl.style.background = 'rgba(0,0,0,0.5)';
+        mediaContainer.innerHTML = '';
+        modal.classList.add('visible');
+        return;
+      }
 
-    mediaContainer.innerHTML = mediaItems.map((m, idx) => {
-      if (m.type === 'audio') {
-        return /* html */`
-          <div class="album-modal-voice">
-            <button type="button" class="sc-play-btn" id="modal-audio-btn-${idx}">▶</button>
-            <div style="flex:1">
-              <div style="font-size:0.24rem; color:#ffd93b;">🎙️ VOICE WISH</div>
-              <div style="font-size:0.2rem; color:#fff;">${m.caption || 'Tap to play'}</div>
-            </div>
-            ${m.url ? `<audio id="modal-audio-el-${idx}" src="${m.url}"></audio>` : ''}
+      // Unlocked / Contributor card
+      detailCard.style.background = card.bg;
+      const detailEmojiEl = document.getElementById('album-detail-emoji');
+      if (typeof card.emoji === 'string' && (card.emoji.startsWith('data:') || card.emoji.startsWith('http') || card.emoji.startsWith('/'))) {
+        detailEmojiEl.innerHTML = `<img src="${card.emoji}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2.5px solid #ffd93b;box-shadow:0 0 14px rgba(255,217,59,0.5);" alt="Badge" />`;
+      } else {
+        detailEmojiEl.textContent = card.emoji || '🎂';
+      }
+
+      document.getElementById('album-detail-title').textContent  = card.title;
+      document.getElementById('album-detail-author').textContent = card.author ? `From: ${card.author} 💌` : '';
+      document.getElementById('album-detail-desc').textContent   = card.description;
+
+      const rl = RARITY_LABEL[card.rarity] || RARITY_LABEL.RARE;
+      rarityEl.textContent = rl.label;
+      rarityEl.style.color = rl.color;
+      rarityEl.style.background = 'rgba(0,0,0,0.3)';
+
+      // Multi-Media: Strictly render contributor's real photos/voice notes
+      const validMedia = (card.mediaItems || []).filter(m => (m.dataUrl || m.url));
+
+      if (validMedia.length === 0) {
+        mediaContainer.innerHTML = '';
+      } else {
+        mediaContainer.innerHTML = /* html */`
+          ${validMedia.length > 1 ? `<div class="album-media-header">📸 ATTACHED PHOTOS (${validMedia.length})</div>` : ''}
+          <div class="album-media-list">
+            ${validMedia.map((m, idx) => {
+              const srcUrl = m.dataUrl || m.url;
+              if (m.type === 'audio') {
+                return /* html */`
+                  <div class="album-modal-voice">
+                    <button type="button" class="sc-play-btn" id="modal-audio-btn-${idx}">▶</button>
+                    <div style="flex:1">
+                      <div style="font-size:0.24rem; color:#ffd93b;">🎙️ VOICE WISH</div>
+                      <div style="font-size:0.2rem; color:#fff;">${m.caption || 'Tap to play'}</div>
+                    </div>
+                    <audio id="modal-audio-el-${idx}" src="${srcUrl}"></audio>
+                  </div>
+                `;
+              }
+              if (m.type === 'video') {
+                return /* html */`
+                  <div class="album-media-card">
+                    <video src="${srcUrl}" controls style="width:100%; border-radius:8px;"></video>
+                    ${m.caption ? `<div style="font-size:0.22rem; color:rgba(255,255,255,0.7); padding:4px;">${m.caption}</div>` : ''}
+                  </div>
+                `;
+              }
+              return /* html */`
+                <div class="album-media-card">
+                  ${validMedia.length > 1 ? `<div class="album-media-badge">PHOTO ${idx + 1} OF ${validMedia.length}</div>` : ''}
+                  <img src="${srcUrl}" alt="Photo ${idx + 1}" class="album-media-photo" data-zoom-src="${srcUrl}" />
+                  ${m.caption ? `<div style="font-size:0.22rem; color:rgba(255,255,255,0.8); padding:4px;">${m.caption}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
           </div>
         `;
       }
-      if (m.type === 'video') {
-        return /* html */`
-          <div>
-            <video src="${m.url}" controls style="width:100%; border-radius:8px;"></video>
-            <div style="font-size:0.22rem; color:rgba(255,255,255,0.7); padding:4px;">${m.caption || ''}</div>
-          </div>
-        `;
-      }
-      return /* html */`
-        <div>
-          <img src="${m.url || '/images/arcade-bg.png'}" alt="Memory" />
-          <div style="font-size:0.22rem; color:rgba(255,255,255,0.7); padding:4px;">${m.caption || ''}</div>
-        </div>
-      `;
-    }).join('');
 
-    // Audio handlers
-    mediaItems.forEach((m, idx) => {
-      if (m.type === 'audio') {
-        const btn = document.getElementById(`modal-audio-btn-${idx}`);
-        const audioEl = document.getElementById(`modal-audio-el-${idx}`);
-        btn?.addEventListener('click', () => {
-          if (audioEl) {
-            if (audioEl.paused) {
-              audioEl.play();
-              btn.textContent = '⏸';
-              audioEl.onended = () => { btn.textContent = '▶'; };
-            } else {
-              audioEl.pause();
-              btn.textContent = '▶';
+      // Audio handlers
+      validMedia.forEach((m, idx) => {
+        if (m.type === 'audio') {
+          const btn = document.getElementById(`modal-audio-btn-${idx}`);
+          const audioEl = document.getElementById(`modal-audio-el-${idx}`);
+          btn?.addEventListener('click', () => {
+            if (audioEl) {
+              if (audioEl.paused) {
+                audioEl.play();
+                btn.textContent = '⏸';
+                audioEl.onended = () => { btn.textContent = '▶'; };
+              } else {
+                audioEl.pause();
+                btn.textContent = '▶';
+              }
             }
-          }
-        });
+          });
+        }
+      });
+
+      modal.classList.add('visible');
+    });
+
+    // Close modal
+    document.getElementById('album-detail-close')?.addEventListener('click', () => {
+      document.getElementById('album-detail')?.classList.remove('visible');
+    });
+    document.getElementById('album-detail')?.addEventListener('click', (e) => {
+      if (e.target.id === 'album-detail') e.target.classList.remove('visible');
+    });
+
+    // Lightbox zoom handlers
+    document.getElementById('album-modal-media')?.addEventListener('click', (e) => {
+      const img = e.target.closest('.album-media-photo');
+      if (img && img.dataset.zoomSrc) {
+        const lb = document.getElementById('album-lightbox');
+        const lbImg = document.getElementById('album-lightbox-img');
+        if (lb && lbImg) {
+          lbImg.src = img.dataset.zoomSrc;
+          lb.classList.add('active');
+        }
       }
     });
 
-    modal.classList.add('visible');
-  });
+    document.getElementById('album-lightbox')?.addEventListener('click', () => {
+      document.getElementById('album-lightbox')?.classList.remove('active');
+    });
+  }
 
-  document.getElementById('album-detail-close')?.addEventListener('click', () => {
-    document.getElementById('album-detail')?.classList.remove('visible');
-  });
-  document.getElementById('album-detail')?.addEventListener('click', (e) => {
-    if (e.target.id === 'album-detail') e.target.classList.remove('visible');
-  });
+  // Initial render
+  renderView();
+
+  // Background Cloud Sync — seamlessly updates cards when cloud response arrives
+  syncCloudContributions().then(() => {
+    if (document.getElementById('album-grid')) {
+      renderView();
+    }
+  }).catch(() => {});
 }

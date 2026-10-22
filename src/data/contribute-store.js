@@ -225,18 +225,14 @@ export async function saveContribution({
       type: m.type || 'photo',
       caption: m.caption || `${authorName}'s memory`,
       url: m.dataUrl || m.url,
+      dataUrl: m.dataUrl || m.url,
       author: authorName,
       createdAt: now,
     };
     saveStoredMedia(item);
     allocatedCardMedia.push(item);
   }
-
-  // If card has no dedicated media, give it random items from the general gallery
-  if (allocatedCardMedia.length < 2) {
-    const extras = getRandomMediaForCard(2 - allocatedCardMedia.length);
-    allocatedCardMedia.push(...extras);
-  }
+  // Keep strictly contributor's uploaded media (do not inject random stock photos)
 
   // 2. Save Scratch Card
   if (cardMessage && cardMessage.trim()) {
@@ -333,8 +329,12 @@ export async function syncCloudContributions() {
 
       // 1. Sync Scratch Card
       if (c.message) {
-        const exists = currentCards.some(card => card.id === c.id || (card.author === c.author && card.description === c.message));
-        if (!exists) {
+        const mediaList = Array.isArray(c.media)
+          ? c.media.map(m => ({ ...m, url: m.dataUrl || m.url, dataUrl: m.dataUrl || m.url }))
+          : [];
+
+        const existingCard = currentCards.find(card => card.id === c.id || (card.author === c.author && card.description === c.message));
+        if (!existingCard) {
           saveStoredCard({
             id: c.id,
             slotId: 'C_' + String(c.id).slice(0, 4),
@@ -345,10 +345,26 @@ export async function syncCloudContributions() {
             rarity: c.rarity || 'RARE',
             color: '#c9a0ff',
             bg: 'linear-gradient(135deg,#2a0a5a,#6030a0)',
-            mediaItems: Array.isArray(c.media) && c.media.length ? c.media : getRandomMediaForCard(2),
+            mediaItems: mediaList,
             createdAt: c.created_at,
           });
+        } else {
+          // Always ensure existing stored card has the contributor's real media and custom badge
+          existingCard.mediaItems = mediaList;
+          if (c.emoji) existingCard.emoji = c.emoji;
+          localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(currentCards));
         }
+
+        // Auto-unlock contributor cards in localStorage so Muski can view and tap them anytime
+        try {
+          const unlocked = JSON.parse(localStorage.getItem('muski_cards') || '[]');
+          const k1 = 'C_' + String(c.id).slice(0, 4);
+          const k2 = c.id;
+          let changed = false;
+          if (!unlocked.includes(k1)) { unlocked.push(k1); changed = true; }
+          if (!unlocked.includes(k2)) { unlocked.push(k2); changed = true; }
+          if (changed) localStorage.setItem('muski_cards', JSON.stringify(unlocked));
+        } catch {}
       }
 
       // 2. Sync Stickers

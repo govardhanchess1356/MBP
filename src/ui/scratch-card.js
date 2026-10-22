@@ -259,9 +259,9 @@ export function showScratchCard(_container, cardData = {}, onDone) {
   const rarity = RARITIES[cardData.rarity] || RARITIES.RARE;
   const bg     = cardData.bg          || rarity.bg;
 
-  // Allocate 2-3 media items (photos, voice notes, video) if not already present
-  let mediaItems = cardData.mediaItems;
-  if (!mediaItems || mediaItems.length === 0) {
+  // Only allocate sample media for default built-in cards, keep contributor cards genuine
+  let mediaItems = Array.isArray(cardData.mediaItems) ? cardData.mediaItems : [];
+  if (mediaItems.length === 0 && (author === 'Birthday Crew' || author === 'Secret Admirer')) {
     mediaItems = getRandomMediaForCard(2);
   }
 
@@ -280,6 +280,8 @@ export function showScratchCard(_container, cardData = {}, onDone) {
         <!-- Multi-Media Gallery Box -->
         <div id="sc-media-box">
           ${mediaItems.map((m, idx) => {
+            const srcUrl = m.dataUrl || m.url;
+            if (!srcUrl) return '';
             if (m.type === 'audio') {
               return /* html */`
                 <div class="sc-voice-player">
@@ -288,22 +290,22 @@ export function showScratchCard(_container, cardData = {}, onDone) {
                     <div style="font-size:0.26rem; color:#ffd93b;">🎙️ VOICE WISH</div>
                     <div style="font-size:0.22rem; color:#fff;">${m.caption || 'Tap to play voice note'}</div>
                   </div>
-                  ${m.url ? `<audio id="sc-audio-el-${idx}" src="${m.url}"></audio>` : ''}
+                  <audio id="sc-audio-el-${idx}" src="${srcUrl}"></audio>
                 </div>
               `;
             }
             if (m.type === 'video') {
               return /* html */`
                 <div class="sc-media-item">
-                  <video class="sc-media-thumb" src="${m.url}" controls></video>
+                  <video class="sc-media-thumb" src="${srcUrl}" controls></video>
                   <div class="sc-media-caption">${m.caption || 'Video memory 🎥'}</div>
                 </div>
               `;
             }
             return /* html */`
               <div class="sc-media-item">
-                <img class="sc-media-thumb" src="${m.url || '/images/arcade-bg.png'}" alt="Memory" />
-                <div class="sc-media-caption">${m.caption || 'Birthday photo 📸'}</div>
+                <img class="sc-media-thumb" src="${srcUrl}" alt="Memory" />
+                <div class="sc-media-caption">${m.caption || (mediaItems.length > 1 ? `Photo ${idx + 1}` : 'Birthday photo 📸')}</div>
               </div>
             `;
           }).join('')}
