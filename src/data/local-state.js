@@ -44,13 +44,3 @@ export function getMuted() {
 export function setMuted(on) {
   localStorage.setItem('muski_muted', on ? 'true' : 'false');
 }
-
-/**
- * Reset all walkthrough progress: 0 coins, 0 cards unlocked, all levels reset.
- */
-export function resetProgress() {
-  localStorage.removeItem('muski_coins');
-  localStorage.removeItem('muski_cards');
-  localStorage.removeItem('muski_levels');
-  localStorage.removeItem('muski_dev_unlocked');
-}

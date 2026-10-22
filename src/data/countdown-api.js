@@ -16,21 +16,11 @@ let _isUnlocked     = false;
  * @returns {{ unlockAt: Date, isUnlocked: boolean, serverOffsetMs: number }}
  */
 export async function fetchCountdown() {
-  // ── Dev URL shortcuts (?reset=true | ?lock=true | ?unlock=true) ─────────────
+  // ── Dev URL preview shortcuts (?preview=boot | ?unlock=true | ?lock=true) ─
   const params = new URLSearchParams(window.location.search);
-
-  if (params.get('reset') === 'true' || params.get('fresh') === 'true') {
-    localStorage.removeItem('muski_coins');
-    localStorage.removeItem('muski_cards');
-    localStorage.removeItem('muski_levels');
-    localStorage.removeItem('muski_dev_unlocked');
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
   if (params.get('lock') === 'true') {
     localStorage.removeItem('muski_dev_unlocked');
   }
-
   const isForceUnlocked = params.get('preview') === 'boot' ||
                           params.get('unlock') === 'true' ||
                           localStorage.getItem('muski_dev_unlocked') === 'true' ||
