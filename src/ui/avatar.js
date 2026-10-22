@@ -35,14 +35,14 @@ export const RETRO_PALETTE_HEX = [
 ];
 
 export const BUILTIN_CARTOON_AVATARS = {
-  default:   '/images/faces/avatar-default.png?v=nobg_v3',
-  happy:     '/images/faces/avatar-happy.png?v=nobg_v3',
-  cool:      '/images/faces/avatar-cool.png?v=nobg_v3',
-  grumpy:    '/images/faces/avatar-grumpy.png?v=nobg_v3',
-  surprised: '/images/faces/avatar-surprised.png?v=nobg_v3',
-  wink:      '/images/faces/avatar-wink.png?v=nobg_v3',
-  laugh:     '/images/faces/avatar-laugh.png?v=nobg_v3',
-  star_eyes: '/images/faces/avatar-star_eyes.png?v=nobg_v3',
+  default:   '/images/faces/avatar-default.png?v=tight_nobg_v4',
+  happy:     '/images/faces/avatar-happy.png?v=tight_nobg_v4',
+  cool:      '/images/faces/avatar-cool.png?v=tight_nobg_v4',
+  grumpy:    '/images/faces/avatar-grumpy.png?v=tight_nobg_v4',
+  surprised: '/images/faces/avatar-surprised.png?v=tight_nobg_v4',
+  wink:      '/images/faces/avatar-wink.png?v=tight_nobg_v4',
+  laugh:     '/images/faces/avatar-laugh.png?v=tight_nobg_v4',
+  star_eyes: '/images/faces/avatar-star_eyes.png?v=tight_nobg_v4',
 };
 
 // Convert hex palette to RGB triplets for Euclidean distance color quantization
