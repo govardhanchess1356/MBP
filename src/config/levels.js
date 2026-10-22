@@ -18,21 +18,21 @@ export const LEVELS = {
       gameId:       'flappy',
       levelIndex:   0,
       label:        'Birthday Breeze',
-      speed:        1.3,         // px per frame at 60fps (gentle, easy pace)
-      gap:          240,         // generous gap between pipes
-      target:       5,           // quick fun goal
+      speed:        1.4,         // 30% reduced speed (was 2.0)
+      gap:          200,         // comfortable pipe gap
+      target:       8,           // target 8
       coinReward:   3,
-      easyMode:     { speed: 1.0, gap: 260 },
+      easyMode:     { speed: 1.1, gap: 230 },
     },
     {
       gameId:       'flappy',
       levelIndex:   1,
       label:        'Party Storm',
-      speed:        1.6,
-      gap:          210,
-      target:       7,
+      speed:        2.1,         // 30% reduced speed (was 3.0)
+      gap:          165,
+      target:       15,          // target 15
       coinReward:   5,
-      easyMode:     { speed: 1.2, gap: 240 },
+      easyMode:     { speed: 1.6, gap: 190 },
     },
   ],
 
@@ -42,47 +42,47 @@ export const LEVELS = {
       gameId:       'dino',
       levelIndex:   0,
       label:        'Birthday Dash',
-      speed:        2.0,          // comfortable running pace
-      distance:     120,          // short, achievable dash
+      speed:        3.2,
+      distance:     400,          // full original distance (400m)
       birdsEnabled: false,
       coinReward:   3,
-      easyMode:     { speed: 1.5 },
+      easyMode:     { speed: 2.4 },
     },
     {
       gameId:       'dino',
       levelIndex:   1,
       label:        'Sprint to 19!',
-      speed:        2.6,
-      distance:     220,
+      speed:        4.5,
+      distance:     800,          // full original distance (800m)
       birdsEnabled: true,
       coinReward:   5,
-      easyMode:     { speed: 1.8, birdsEnabled: false },
+      easyMode:     { speed: 3.2, birdsEnabled: false },
     },
   ],
 
-  // ── Asteroids: "Cake Defender" ──────────────────────────────────────────
+  // ── Asteroids: "Cake Defender" (Reverted to original) ────────────────────
   asteroids: [
     {
       gameId:         'asteroids',
       levelIndex:     0,
       label:          'Cupcake Cannon',
-      target:         5,
-      rockSpeedScale: 0.5,
-      rockSpawnRate:  0.35,
+      target:         10,
+      rockSpeedScale: 1.0,
+      rockSpawnRate:  0.55,
       splitOnDestroy: false,
       coinReward:     3,
-      easyMode:       { rockSpeedScale: 0.35, rockSpawnRate: 0.25 },
+      easyMode:       { rockSpeedScale: 0.65, rockSpawnRate: 0.35 },
     },
     {
       gameId:         'asteroids',
       levelIndex:     1,
       label:          'Gift Box Blitz',
-      target:         8,
-      rockSpeedScale: 0.7,
-      rockSpawnRate:  0.45,
-      splitOnDestroy: false,
+      target:         20,
+      rockSpeedScale: 1.6,
+      rockSpawnRate:  0.85,
+      splitOnDestroy: true,
       coinReward:     5,
-      easyMode:       { rockSpeedScale: 0.45, rockSpawnRate: 0.3, splitOnDestroy: false },
+      easyMode:       { rockSpeedScale: 1.1, rockSpawnRate: 0.55, splitOnDestroy: false },
     },
   ],
 
@@ -92,49 +92,49 @@ export const LEVELS = {
       gameId:       'jetpack',
       levelIndex:   0,
       label:        'Jetpack Joy',
-      distance:     160,
-      coinDensity:  0.8,
+      distance:     500,          // full original distance (500)
+      coinDensity:  0.6,
       laserEnabled: false,
-      scrollSpeed:  2.0,
+      scrollSpeed:  4.0,
       coinReward:   3,
-      easyMode:     { scrollSpeed: 1.5, coinDensity: 0.9 },
+      easyMode:     { scrollSpeed: 2.8, coinDensity: 0.8 },
     },
     {
       gameId:       'jetpack',
       levelIndex:   1,
       label:        'Laser Fiesta',
-      distance:     280,
-      coinDensity:  0.9,
+      distance:     1000,         // full original distance (1000)
+      coinDensity:  0.8,
       laserEnabled: true,
-      scrollSpeed:  2.5,
+      scrollSpeed:  6.0,
       coinReward:   5,
-      easyMode:     { scrollSpeed: 1.8, laserEnabled: false },
+      easyMode:     { scrollSpeed: 4.2, laserEnabled: false },
     },
   ],
 
-  // ── Platformer: "Super Muski" ───────────────────────────────────────────
+  // ── Platformer: "Super Muski" (Reverted to original) ─────────────────────
   platformer: [
     {
       gameId:      'platformer',
       levelIndex:  0,
       label:       'Super Muski Begins',
-      mapLength:   1000,
-      enemyCount:  2,
-      gapWidth:    35,
-      scrollSpeed: 1.5,
+      mapLength:   2400,
+      enemyCount:  5,
+      gapWidth:    60,
+      scrollSpeed: 2.5,
       coinReward:  3,
-      easyMode:    { gapWidth: 25, enemyCount: 1, scrollSpeed: 1.2 },
+      easyMode:    { gapWidth: 40, enemyCount: 2, scrollSpeed: 1.8 },
     },
     {
       gameId:      'platformer',
       levelIndex:  1,
       label:       'The Final World',
-      mapLength:   1500,
-      enemyCount:  3,
-      gapWidth:    45,
-      scrollSpeed: 1.9,
+      mapLength:   4800,
+      enemyCount:  10,
+      gapWidth:    90,
+      scrollSpeed: 3.5,
       coinReward:  5,
-      easyMode:    { gapWidth: 30, enemyCount: 1, scrollSpeed: 1.4 },
+      easyMode:    { gapWidth: 60, enemyCount: 5, scrollSpeed: 2.5 },
     },
   ],
 };

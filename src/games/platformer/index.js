@@ -106,7 +106,7 @@ function update(dt, input, engine) {
   _player.worldX += speed * f;
   _cameraX = _player.worldX - SCREEN_X;
 
-  // Jump input (double-jump enabled for all levels for fun agility)
+  // Jump input
   if (input.tapped) {
     if (_player.onGround) {
       _player.vy = JUMP_VY;
@@ -117,7 +117,8 @@ function update(dt, input, engine) {
       engine.particles.burst(SCREEN_X, _player.y - 10, {
         count: 6, colors: ['#DA627D','#FFA5AB','#ffd93b'], speed: 2.5, size: 3,
       });
-    } else if (!_player.doublejumpUsed) {
+    } else if (_config.levelIndex === 1 && !_player.doublejumpUsed) {
+      // Double-jump (L2 only)
       _player.vy = DBL_JUMP_VY;
       _player.doublejumpUsed = true;
       engine.SFX.jump();
@@ -133,16 +134,16 @@ function update(dt, input, engine) {
   _player.y  += _player.vy * f;
   _player.onGround = false;
 
-  // ── Platform collision (generous edge tolerance) ───────────────────────────
+  // ── Platform collision ─────────────────────────────────────────────────────
   for (const plat of _platforms) {
     const sx = plat.x - _cameraX;
-    if (sx + plat.w < SCREEN_X - PLAYER_W - 8) continue;
-    if (sx > SCREEN_X + PLAYER_W + 8)          continue;
+    if (sx + plat.w < SCREEN_X - PLAYER_W - 4) continue;
+    if (sx > SCREEN_X + PLAYER_W + 4)          continue;
 
     // Landing check: falling down and crossed platform top
-    if (_player.vy >= 0 && _player.prevY <= plat.y + 4 && _player.y >= plat.y) {
+    if (_player.vy >= 0 && _player.prevY <= plat.y && _player.y >= plat.y) {
       const px = _player.worldX;
-      if (px + PLAYER_W + 10 > plat.x && px - PLAYER_W - 10 < plat.x + plat.w) {
+      if (px + PLAYER_W > plat.x && px - PLAYER_W < plat.x + plat.w) {
         _player.y  = plat.y;
         _player.vy = 0;
         _player.onGround = true;
@@ -158,7 +159,7 @@ function update(dt, input, engine) {
     return;
   }
 
-  // ── Enemy logic (forgiving stomp detection) ────────────────────────────────
+  // ── Enemy logic ────────────────────────────────────────────────────────────
   for (const enemy of _enemies) {
     if (!enemy.alive) continue;
     enemy.x += enemy.vx * 1.2 * f;
@@ -167,19 +168,18 @@ function update(dt, input, engine) {
     const ex = enemy.x - _cameraX;
     const ey = enemy.y;
 
-    // Stomp: player center in range, landing from above
-    const hx = Math.abs(SCREEN_X - ex) < 28;
-    if (hx && _player.vy > -2 && _player.y >= ey - 28 && _player.y <= ey + 4) {
+    // Stomp: player falling, center in range, lands on top
+    const hx = Math.abs(SCREEN_X - ex) < 26;
+    if (hx && _player.vy > 0 && _player.y > ey - 22 && _player.prevY <= ey - 14) {
       enemy.alive = false;
-      _player.vy = -9; // big fun bounce
-      _player.doublejumpUsed = false;
+      _player.vy = -8; // bounce
       _enemiesStomped++;
       _coinsCollected++;
       engine.SFX.coin();
       engine.particles.burst(ex, ey, { count: 10, colors: ['#5effa3','#ffd93b'], speed: 4, size: 4 });
     }
     // Side collision
-    else if (hx && Math.abs(_player.y - ey) < 18) {
+    else if (hx && Math.abs(_player.y - ey) < 22) {
       die(engine);
       return;
     }

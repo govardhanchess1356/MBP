@@ -13,9 +13,9 @@ import { CANVAS_W, CANVAS_H } from '@/config/constants.js';
 // ── Constants ─────────────────────────────────────────────────────────────────
 const SEG_W        = 20;
 const SEG_COUNT    = 30;           // segments kept alive
-const GRAVITY      = 0.42;
-const THRUST_ACCEL = -0.8;
-const MAX_VY       = 11;
+const GRAVITY      = 0.33;         // gentler gravity for extended air time per click
+const THRUST_ACCEL = -0.85;        // responsive thrust
+const MAX_VY       = 10;
 const PLAYER_R     = 16;           // hitbox radius
 const COIN_COLLECT_DIST = 22;
 
@@ -182,7 +182,12 @@ function update(dt, input, engine) {
   }
 
   // ── Player physics ────────────────────────────────────────────────────────
-  _player.thrusting = input.held;
+  _player.thrusting = input.held || input.tapped;
+
+  // Extra buoyant impulse on tap/click so single clicks provide great air time
+  if (input.tapped) {
+    _player.vy = Math.min(_player.vy - 2.8, -4.2);
+  }
 
   if (input.held) {
     _player.vy += THRUST_ACCEL * f;
